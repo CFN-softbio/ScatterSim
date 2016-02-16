@@ -100,19 +100,28 @@ class CircularAverageSimulation(Simulation):
         # TODO: Return a Scattering object
         return intensity
 
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
+    def angular_2d(self, theta_incident, th_scan_tuple,phi_scan_tuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in theta_scan and phi_scan are specified as tuples."""
+        The range in theta_scan and phi_scan are specified as tuples.
 
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
+        """
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
         # TODO: Peform simulation
 
         return 0.0
     
     
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
-
+        The range in qy and qz are specified as tuples.
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
         status_print( "Starting circular simulation...", depth=0 )
 
         data = numpy.zeros( (qy_num, qz_num), numpy.float )
@@ -231,16 +240,28 @@ class BoxAverageSimulation(Simulation):
         return 0.0
         
     # TODO: Implement:
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
+    def angular_2d(self, theta_incident, th_scan_tuple, phi_scan_tuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in theta_scan and phi_scan are specified as tuples."""
+        The range in theta_scan and phi_scan are specified as tuples.
+
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
+        """
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
         return 0.0
     
         
 
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
+        The range in qy and qz are specified as tuples.
+
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
 
         status_print( "Starting box average simulation...", depth=0 )
         
@@ -299,13 +320,19 @@ class BoxAverageSimulation(Simulation):
         return scatter
 
 
-    def ewald_2d_parallel(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d_parallel(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
+        The range in qy and qz are specified as tuples.
+
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
 
         # Parallel operation is acheived by spawning multiple Python processes
         # using the multiprocessing module, available in Python >=2.6. See:
         # http://docs.python.org/library/multiprocessing.html#module-multiprocessing.pool
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
 
         arglist = ( theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num) )
 
@@ -583,18 +610,30 @@ class StochasticSamplingSimulation(Simulation):
         
         
     # TODO: Implement:
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
+    def angular_2d(self, theta_incident, th_scan_tuple, phi_scan_tuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in theta_scan and phi_scan are specified as tuples."""
+        The range in theta_scan and phi_scan are specified as tuples.
+    
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
+        """
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
         
         # TODO: Return scattering object
         return 0.0
 
 
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
+        The range in qy and qz are specified as tuples.
 
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
+
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
         if self.sargs['parallelize']:
             return self.ewald_2d_parallel(theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num))
 
@@ -637,13 +676,19 @@ class StochasticSamplingSimulation(Simulation):
 
         return scatter
 
-    def ewald_2d_parallel(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d_parallel(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
+        The range in qy and qz are specified as tuples.
+
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
 
         # Parallel operation is acheived by spawning multiple Python processes
         # using the multiprocessing module, available in Python >=2.6. See:
         # http://docs.python.org/library/multiprocessing.html#module-multiprocessing.pool
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
 
         arglist = ( theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num) )
         
@@ -749,15 +794,27 @@ class DummySimulation(Simulation):
         return 0.0
         
     # TODO: Implement:
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
+    def angular_2d(self, theta_incident, th_scan_tuple, phi_scan_tuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in theta_scan and phi_scan are specified as tuples."""
+        The range in theta_scan and phi_scan are specified as tuples.
+
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
+        """
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
         return 0.0
     
     # TODO: Implement:
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max, qz_num)):
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in qy and qz are specified as tuples."""
+        The range in qy and qz are specified as tuples.
+
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
+        """
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max, qz_num) = qztuple
         
         data = numpy.zeros( (qy_num, qz_num), numpy.float )
         

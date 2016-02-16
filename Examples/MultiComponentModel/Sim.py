@@ -33,7 +33,7 @@ from MultiComponentInteraction import *
 ptype = 'structure_factor'
 area_of_interest = [0.0,1.2,0,2.5]
 
-plot_data = True
+plot_data = False
 
 
 
@@ -45,10 +45,10 @@ data_dir = '../data/'
 data_file = 'Iq_FAA15_10120_14Kev.dat'
 ff_data_file = 'Free_FAA15_10120_14Kev.dat'
 
-d = ExperimentalData1D()
-d.load_intensity_txt( data_dir+data_file, skiprows=1, subtract_minimum=True )
-d.load_form_factor_txt( data_dir+ff_data_file, skiprows=1, subtract_minimum=True )
-d.set_structure_factor_asymptote( 0.75, 0.82 )
+#d = ExperimentalData1D()
+#d.load_intensity_txt( data_dir+data_file, skiprows=1, subtract_minimum=True )
+#d.load_form_factor_txt( data_dir+ff_data_file, skiprows=1, subtract_minimum=True )
+#d.set_structure_factor_asymptote( 0.75, 0.82 )
     
 
 if plot_data:
@@ -210,7 +210,7 @@ constraints = [ [0.0, 1e20], # c
 m = MultiComponentModel( l, peak1, back, c=2.1e-12 , margs=margs )
 #m.set_experimental_P_of_q( d.q_ff_vals, d.ff_vals ) # Introduces factor of: ~2e-12*
 
-f = MultiComponentFit( d, m, initial_guess=initial_guess,  q_start=0.165, q_end=0.67, vary=vary, step_sizes=step_sizes, constraints=constraints, fargs=fargs )
+#f = MultiComponentFit( d, m, initial_guess=initial_guess,  q_start=0.165, q_end=0.67, vary=vary, step_sizes=step_sizes, constraints=constraints, fargs=fargs )
 
 
 
