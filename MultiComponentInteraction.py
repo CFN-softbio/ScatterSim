@@ -119,7 +119,18 @@ def overlay_ops(data_file, plot=True, plot_offset=1.4, plot_txt_offset=0.1, outp
 
 
 
-def overlay_plot_old( (x1, y1), (x2,y2), (x3,y3), (x4,y4), filename='overlay.png', data_name=None, scaling=None, offset=1.4, txt_offset=0.1, xlog=False, ylog=False ):
+def overlay_plot_old(x1t, x2t, x3t, x4t , filename='overlay.png', data_name=None, scaling=None, offset=1.4, txt_offset=0.1, xlog=False, ylog=False ):
+    ''' tuples:
+        x1t - (x1, y1)
+        x2t - (x2, y2)
+        x3t - (x3, y3)
+        x4t - (x4, y4)
+    '''
+    x1,y1 = x1t
+    x2,y2 = x2t
+    x3,y3 = x3t
+    x4,y4 = x4t
+    
 
     pylab.rcParams['axes.labelsize'] = 34
     pylab.rcParams['xtick.labelsize'] = 'x-large'

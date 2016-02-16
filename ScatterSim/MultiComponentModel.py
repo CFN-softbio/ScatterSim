@@ -421,10 +421,10 @@ class NanoObject(Potential):
         return P, beta
 
 
-    def plot_form_factor_amplitude(self, (q_initial, q_final, num_q), filename='form_factor_amplitude.png', ylog=False):
+    def plot_form_factor_amplitude(self, qtuple, filename='form_factor_amplitude.png', ylog=False):
         """Outputs a plot of the intensity vs. q data. Also returns an array
         of the intensity values."""
-        
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         int_list = []
@@ -464,10 +464,12 @@ class NanoObject(Potential):
             
     
 
-    def plot_form_factor_intensity(self, (q_initial, q_final, num_q), filename='form_factor_intensity.png', ylog=False):
+    def plot_form_factor_intensity(self, qtuple, filename='form_factor_intensity.png', ylog=False):
         """Outputs a plot of the intensity vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q) 
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         int_list = []
@@ -502,10 +504,12 @@ class NanoObject(Potential):
         
         return int_list
             
-    def plot_form_factor_intensity_isotropic(self, (q_initial, q_final, num_q), filename='form_factor_intensity_isotropic.png', ylog=False, num_phi=50, num_theta=50):
+    def plot_form_factor_intensity_isotropic(self, qtuple, filename='form_factor_intensity_isotropic.png', ylog=False, num_phi=50, num_theta=50):
         """Outputs a plot of the intensity vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q)
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta )
@@ -540,10 +544,12 @@ class NanoObject(Potential):
         return int_list
 
 
-    def plot_beta_ratio(self, (q_initial, q_final, num_q), filename='beta_ratio.png', ylog=False, approx=False):
+    def plot_beta_ratio(self, qtuple, filename='beta_ratio.png', ylog=False, approx=False):
         """Outputs a plot of the beta-ratio vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple = (q_initial, q_final, num_q) 
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         int_list = self.beta_ratio_array( q_list, approx=approx )
@@ -2773,10 +2779,12 @@ class Lattice(object):
     # Plotting
     ########################################
     
-    def plot_structure_factor_isotropic(self, (q_initial, q_final, num_q), peak, filename='S_of_q.png', c=1.0, background=None, max_hkl=6, ylog=False):
+    def plot_structure_factor_isotropic(self, qtuple, peak, filename='S_of_q.png', c=1.0, background=None, max_hkl=6, ylog=False):
         """Outputs a plot of the intensity vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q)
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         S_list = self.structure_factor_isotropic_array( q_list, peak, c=c, background=background, max_hkl=max_hkl )
@@ -2811,10 +2819,12 @@ class Lattice(object):
             
     
     
-    def plot_intensity(self, (q_initial, q_final, num_q), peak, filename='intensity.png', c=1.0, background=None, max_hkl=6, ylog=False):
+    def plot_intensity(self, qtuple, peak, filename='intensity.png', c=1.0, background=None, max_hkl=6, ylog=False):
         """Outputs a plot of the intensity vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q)
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         
@@ -2843,10 +2853,12 @@ class Lattice(object):
         return int_list
             
 
-    def plot_form_factor_intensity_isotropic(self, (q_initial, q_final, num_q), filename='form_factor_isotropic.png', ylog=False):
+    def plot_form_factor_intensity_isotropic(self, qtuple, filename='form_factor_isotropic.png', ylog=False):
         """Outputs a plot of the P(q) vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q)
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=50, num_theta=50)
@@ -2874,10 +2886,12 @@ class Lattice(object):
         return int_list
          
          
-    def plot_beta_ratio(self, (q_initial, q_final, num_q), filename='beta_ratio.png', ylog=False):
+    def plot_beta_ratio(self, qtuple, filename='beta_ratio.png', ylog=False):
         """Outputs a plot of the beta ratio vs. q data. Also returns an array
-        of the intensity values."""
-        
+        of the intensity values.
+        qtuple - (q_initial, q_final, num_q)
+        """
+        (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = numpy.linspace( q_initial, q_final, num_q, endpoint=True )
         

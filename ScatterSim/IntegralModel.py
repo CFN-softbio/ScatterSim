@@ -192,8 +192,9 @@ class IntegralGISAXSModel(Model):
         
         return ReflectionIntensity.real
 
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
-        
+    def angular_2d(self, theta_incident, th_scan_tuple, phi_scan_tuple):
+        (theta_scan_min, theta_scan_max, theta_scan_num) = th_scan_tuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phi_scan_tuple
         status_print( "Starting Angular 2D Calc...", depth=2 )
         
         detector_image = numpy.empty( (phi_scan_num, theta_scan_num), numpy.float )
@@ -208,8 +209,9 @@ class IntegralGISAXSModel(Model):
         
         return detector_image
 
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max,qz_num)):
-        
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max,qz_num) = qztuple
         status_print( "Starting Ewald 2D Calc...", depth=2 )
         
         detector_image = numpy.empty( (qy_num, qz_num), numpy.float )

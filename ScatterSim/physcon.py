@@ -99,19 +99,19 @@ u =  all['amu'][2]
 
 
 def help():
-    print 'Available functions:'
-    print '[note: key must be a string, within quotes!]' 
-    print '  value(key) returns value (float)'
-    print '  sd(key)    returns standard deviation (float)'
-    print '  relsd(key) returns relative standard deviation (float)'
-    print '  descr(key) prints description with units\n'
-    print 'Available global variables:'
-    print '  alpha, a_0, c, e, eps_0, F, G, g_e, g_p, gamma_p, h, hbar, k_B'
-    print '  m_d, m_e, m_n, m_p, mu_B, mu_e, mu_N, mu_p, mu_0, N_A, R, sigma, u\n'
+    print('Available functions:')
+    print('[note: key must be a string, within quotes!]')
+    print('  value(key) returns value (float)')
+    print('  sd(key)    returns standard deviation (float)')
+    print('  relsd(key) returns relative standard deviation (float)')
+    print('  descr(key) prints description with units\n')
+    print('Available global variables:')
+    print('  alpha, a_0, c, e, eps_0, F, G, g_e, g_p, gamma_p, h, hbar, k_B')
+    print('  m_d, m_e, m_n, m_p, mu_B, mu_e, mu_N, mu_p, mu_0, N_A, R, sigma, u\n')
     allkeys=all.keys()
     allkeys.sort()
-    print 'Available keys:'
-    print allkeys
+    print('Available keys:')
+    print(allkeys)
 
 def value(key):
     return all[key][2]
@@ -123,14 +123,14 @@ def relsd(key):
     return all[key][4]
 
 def descr(key):
-    print 'Description of ',key,':'
-    print '  Name:               ',all[key][0]
-    print '  Symbol (if avail.): ',all[key][1]
-    print '  Value:              ',all[key][2]
-    print '  Standard deviation: ',all[key][3] 
-    print '  Relative stdev:     ',all[key][4]
-    print '  value(sd) unit:     ',all[key][5]
-    print '  Source:             ',all[key][6],'\n'
+    print('Description of ',key,':')
+    print('  Name:               ',all[key][0])
+    print('  Symbol (if avail.): ',all[key][1])
+    print('  Value:              ',all[key][2])
+    print('  Standard deviation: ',all[key][3] )
+    print('  Relative stdev:     ',all[key][4])
+    print('  value(sd) unit:     ',all[key][5])
+    print('  Source:             ',all[key][6],'\n')
     
 
 
