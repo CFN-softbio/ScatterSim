@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+
+from BaseClasses import *  
+from Potentials import *
+from IntegralModel import *
+from Simulations import *
+
+
+
+import time                                     # For performance measurements
+
+global_start_time = time.clock()
+def timing( reset=False ):
+    """Prints out timing information."""
+    
+    global global_start_time
+    
+    if reset:
+        global_start_time = time.clock()
+        
+    elapsed = (time.clock()-global_start_time)
+    elapsed_string = '%3.2f'%elapsed    
+    status_print( "[[Timing: "+elapsed_string+'s]]', depth=0 )
+    
+    
