@@ -20,8 +20,8 @@
 ###################################################################
 
 
-from BaseClasses import *  
-from gamma import *
+from ScatterSim.BaseClasses import *  
+from ScatterSim.gamma import *
 import os, sys
 
 import random
