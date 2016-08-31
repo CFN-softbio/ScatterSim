@@ -16,7 +16,7 @@
 ###################################################################
 
 
-from BaseClasses import *  
+from ScatterSim.BaseClasses import *  
 
 class IntegralGISAXSModel(Model):
     """Implements the Integral GISAXS formalism for computing

@@ -695,6 +695,8 @@ class PolydisperseNanoObject(NanoObject):
         self.P_beta_array_already_computed_qlist = []
         self.P_beta_array_already_computed = []
 
+        self.distribution_list = []
+
 
     def distribution(self, spread=2.5, force=False):
         if self.distribution_list==[] or force:
@@ -2706,6 +2708,7 @@ class Lattice(object):
         P = self.form_factor_intensity_isotropic_array(q_list)
         
         S = (c/(q_list**2 * P))*self.sum_over_hkl_array(q_list, peak, max_hkl=max_hkl)
+        #S = (c/(q_list**2 ))*self.sum_over_hkl_array(q_list, peak, max_hkl=max_hkl)
         
         if background==None:
             return S

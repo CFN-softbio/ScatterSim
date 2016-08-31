@@ -14,10 +14,10 @@ import sys, shutil
 # You need two paths for it to work for now
 #ScatterSim_PATH='/home/kyager/BNL/ScatterSim/main'
 #ScatterSim_PATH in sys.path or sys.path.append(ScatterSim_PATH)
-ScatterSim_PATH='/home/lhermitt/research/projects/kevin/ScatterSim'
-ScatterSim_PATH in sys.path or sys.path.append(ScatterSim_PATH)
-ScatterSim_PATH = '/home/lhermitt/research/projects/kevin/ScatterSim/ScatterSim'
-ScatterSim_PATH in sys.path or sys.path.append(ScatterSim_PATH)
+#ScatterSim_PATH='/home/lhermitt/research/projects/kevin/ScatterSim'
+#ScatterSim_PATH in sys.path or sys.path.append(ScatterSim_PATH)
+#ScatterSim_PATH = '/home/lhermitt/research/projects/kevin/ScatterSim/ScatterSim'
+#ScatterSim_PATH in sys.path or sys.path.append(ScatterSim_PATH)
 
 
 from ScatterSim.Scattering import *

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from BaseClasses import *  
-from Potentials import *
-from IntegralModel import *
-from Simulations import *
+from ScatterSim.BaseClasses import *  
+from ScatterSim.Potentials import *
+from ScatterSim.IntegralModel import *
+from ScatterSim.Simulations import *
 
 
 

@@ -15,7 +15,7 @@
 ###################################################################
 
 
-from BaseClasses import *  
+from ScatterSim.BaseClasses import *  
 
 class SolutionModel(Model):
 
@@ -73,14 +73,25 @@ class SolutionModel(Model):
         """Returns the intensity for the given scattering angle."""
         return 0.0
 
-    def angular_2d(self, theta_incident, (theta_scan_min, theta_scan_max, theta_scan_num), (phi_scan_min, phi_scan_max, phi_scan_num)):
+    def angular_2d(self, theta_incident, thtuple, phtuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range in theta_scan and phi_scan are specified as tuples."""
+        The range in theta_scan and phi_scan are specified as tuples.
+
+        (theta_scan_min, theta_scan_max, theta_scan_num) = thtuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phtuple
+        """
+        (theta_scan_min, theta_scan_max, theta_scan_num) = thtuple
+        (phi_scan_min, phi_scan_max, phi_scan_num) = phtuple
         return 0.0
         
-    def ewald_2d(self, theta_incident, (qy_min, qy_max, qy_num), (qz_min, qz_max,qz_num)):
+    def ewald_2d(self, theta_incident, qytuple, qztuple):
         """Returns the intensity for a 2d subset of the Ewald-sphere.
-        The range of q-values is specified as tubles."""
+        The range of q-values is specified as tubles.
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max,qz_num) = qztuple
+        """
+        (qy_min, qy_max, qy_num) = qytuple
+        (qz_min, qz_max,qz_num) = qztuple
         return 0.0
 
 

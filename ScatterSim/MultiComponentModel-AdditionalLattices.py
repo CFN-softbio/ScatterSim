@@ -1,4 +1,4 @@
-
+from ScatterSim.MultiComponentModel import Lattice
  
 # Pt3O4 strcutures
 ################################################################### 
@@ -22,7 +22,7 @@ class Pt3O4Lattice(Lattice):
         self.lattice_spacing_b = lattice_spacing_a
         self.lattice_spacing_c = lattice_spacing_a
         self.alpha = radians(90)
-       self.beta = radians(90)
+        self.beta = radians(90)
         self.gamma = radians(90)
        
         self.sigma_D = sigma_D          # Lattice disorder

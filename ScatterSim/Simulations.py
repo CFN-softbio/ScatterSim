@@ -20,7 +20,7 @@
 # realistically.
 ###################################################################
 
-from BaseClasses import *
+from ScatterSim.BaseClasses import *
  
  
  
