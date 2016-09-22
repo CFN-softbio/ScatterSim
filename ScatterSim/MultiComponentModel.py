@@ -20,8 +20,8 @@
 ###################################################################
 
 
-from ScatterSim.BaseClasses import *  
-from ScatterSim.gamma import *
+from ScatterSim.BaseClasses import Potential  
+from ScatterSim import gamma
 import os, sys
 
 import random
@@ -88,26 +88,17 @@ class NanoObject(Potential):
     def rotation_elements(self, eta, phi, theta):
         """Converts angles into an appropriate rotation matrix."""
         
-        # Possible BUG: These rotations might be conceptually wrong...
+        # Still need to confirm if each rotation is really counter-clockwise
         
         # Three-axis rotation:
-        # 1. Rotate about +z by eta 
-        # 2. Tilt by phi with respect to +z (rotation about y-axis) then
-        # 3. rotate by theta in-place (rotation about z-axis)
+        # 1. Rotate about +z by eta (counter-clockwise in x-y plane)
+        # 2. Tilt by phi with respect to +z (rotation about y-axis, counter-clockwise in x-z plane) then
+        # 3. rotate by theta in-place (rotation about z-axis, counter-clockwise in x-y plane))
 
         eta = radians( eta )        # eta is orientation around the z axis (before reorientation)
         phi = radians( phi )        # phi is grain tilt (with respect to +z axis)
         theta = radians( theta )    # grain orientation (around the z axis)
         
-#        rotation_elements = [[  cos(eta)*cos(phi)*cos(theta)-sin(eta)*sin(theta) ,
-#                                    -cos(eta)*cos(phi)*sin(theta)-sin(eta)*cos(theta) ,
-#                                    -cos(eta)*sin(phi)                                   ],
-#                            [  sin(eta)*cos(phi)*cos(theta)+cos(eta)*sin(theta) ,
-#                                    -sin(eta)*cos(phi)*sin(theta)+cos(eta)*cos(theta) ,
-#                                    sin(eta)*sin(phi)                                    ],
-#                            [ -sin(phi)*cos(theta) ,
-#                                sin(phi)*sin(theta) ,
-#                                cos(phi)                                              ]]
         #eta, phi, theta
         c1 = cos(eta);c2 = cos(phi); c3 = cos(theta);
         s1 = sin(eta); s2 = sin(phi); s3 = sin(theta);
