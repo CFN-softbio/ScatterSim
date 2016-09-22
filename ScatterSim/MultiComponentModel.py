@@ -128,10 +128,11 @@ class NanoObject(Potential):
         # slowest varying (leftermost) index is xyz selection
         q_vector = numpy.array( [qx, qy, qz] )
         
-        # np.dot sums before last element of first times last of second:
-        # Result_ijklmno = sum(a[i,j,k,:,l] * b[m,n,o,:]) for example
+        # I use tensordot to specify exact axes for dot.
+        # np.dot only dots the before fastest varying index from the left with the
+        # fastest varying index on the right
         q_rotated = numpy.tensordot( self.rotation_matrix, q_vector,axes=(1,0) )
-        # I don't understand these:
+
         qx = q_rotated[0]
         qy = q_rotated[1]
         qz = q_rotated[2]
