@@ -25,6 +25,8 @@ from ScatterSim.BaseClasses import radians, cos, sin
 from ScatterSim import gamma
 import os, sys
 
+from cmath import exp as cexp
+
 import random
 import numpy as np
 
@@ -262,8 +264,8 @@ class NanoObject(Potential):
             return self.form_factor_isotropic_already_computed[q]
         
         
-        phi_vals, dphi = np.linspace( 0, 2*pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         
         F = 0.0
@@ -353,8 +355,8 @@ class NanoObject(Potential):
         
         # Using array methods is at least 2X faster
         
-        phi_vals, dphi = np.linspace( 0, 2*pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         F = np.zeros( (len(q_list)), dtype=np.complex )
         
@@ -378,8 +380,8 @@ class NanoObject(Potential):
         average over every possible orientation. This value is denoted
         by P(q)"""
         
-        phi_vals, dphi = np.linspace( 0, 2*pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         
         P = 0.0
@@ -753,11 +755,11 @@ class PolydisperseNanoObject(NanoObject):
         step = 2*spread*sigma/(num_points-1)
         R = radius - step*(num_points-1)/2.0
         
-        prefactor = 1/( sigma*sqrt(2*pi) )
+        prefactor = 1/( sigma*np.sqrt(2*np.pi) )
         
         for i in range(num_points):
             delta = radius-R
-            wt = prefactor*exp( - (delta**2)/(2*( sigma**2 ) ) )
+            wt = prefactor*np.exp( - (delta**2)/(2*( sigma**2 ) ) )
             
             curNanoObject = self.baseNanoObjectClass(pargs=self.pargs)
             curNanoObject.rebuild( pargs={'radius':R} )
@@ -916,7 +918,7 @@ class PolydisperseNanoObject(NanoObject):
             # Note that we have to divide by 4*pi
             # This is because the spherical integration inside the ||^2, so the 
             # surface area term gets squared, to (4*pi)^2
-            G = G.real/(4*pi)
+            G = G.real/(4*np.pi)
             
         if self.pargs['cache_results']:
             self.beta_numerator_already_computed[q] = G
@@ -939,7 +941,7 @@ class PolydisperseNanoObject(NanoObject):
             # Note that we have to divide by 4*pi
             # This is because the spherical integration inside the ||^2, so the 
             # surface area term gets squared, to (4*pi)^2
-            G = G.real/(4*pi)
+            G = G.real/(4*np.pi)
             
         if self.pargs['cache_results']:
             self.beta_numerator_array_already_computed_qlist = q_list
@@ -953,8 +955,8 @@ class PolydisperseNanoObject(NanoObject):
         averaging is done last. That is, instead of calculating |<<F>>_iso|^2, we
         calculate <|<F>|^2>_iso """
 
-        phi_vals, dphi = np.linspace( 0, 2*pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         G = 0.0
 
@@ -989,8 +991,8 @@ class PolydisperseNanoObject(NanoObject):
         averaging is done last. That is, instead of calculating |<<F>>_iso|^2, we
         calculate <|<F>|^2>_iso """
         
-        phi_vals, dphi = np.linspace( 0, 2*pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         G = np.zeros(len(q_list))
         
@@ -1152,7 +1154,7 @@ class CubeNanoObject(NanoObject):
         F = np.zeros( (len(qx)), dtype=np.complex )
         
         qx, qy, qz = self.rotate_coord(qx, qy, qz)
-        F = self.pargs['delta_rho']*volume*np.sinc(qx*R/pi)*np.sinc(qy*R/pi)*np.sinc(qz*R/pi)
+        F = self.pargs['delta_rho']*volume*np.sinc(qx*R/np.pi)*np.sinc(qy*R/np.pi)*np.sinc(qz*R/np.pi)
         
         return F
 
@@ -1163,8 +1165,8 @@ class CubeNanoObject(NanoObject):
         # TODO: This function is no longer necessary, and can be removed
         
         # Because of symmetry, we only have to measure 1 of the 8 octants
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2, num_theta, endpoint=False, retstep=True )
         
         
         F = 0.0
@@ -1187,8 +1189,8 @@ class CubeNanoObject(NanoObject):
         """Returns the particle form factor, averaged over every possible orientation."""
         
         # Because of symmetry, we only have to measure 1 of the 8 octants
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2, num_theta, endpoint=False, retstep=True )
         
         # The code below is optimized (especially removing loop invariants)
         
@@ -1227,14 +1229,14 @@ class CubeNanoObject(NanoObject):
         by P(q)"""
         
         # Because of symmetry, we only have to measure 1 of the 8 octants
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2, num_theta, endpoint=False, retstep=True )
         
         R = self.pargs['radius']
         volume = (2*R)**3
         
         if q==0:
-            return ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            return ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
 
         prefactor = 128*( (self.pargs['delta_rho']*volume)**2 )/( (q*R)**6 ) # Includes the factor (8) to account for only measuring one octant
         #prefactor = 16*64*( (self.pargs['delta_rho'])**2 )/( q**6 )
@@ -1273,8 +1275,8 @@ class CubeNanoObject(NanoObject):
         average over every possible orientation. This value is denoted
         by P(q)"""
         
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2, num_theta, endpoint=False, retstep=True )
         
         R = self.pargs['radius']
         volume = (2*R)**3
@@ -1308,7 +1310,7 @@ class CubeNanoObject(NanoObject):
 
         P *= prefactor
         if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
         
         return P
 
@@ -1460,8 +1462,8 @@ class SuperballNanoObject(NanoObject):
             return self.form_factor_intensity_isotropic_already_computed[q]
         
         # Because of symmetry, we only have to measure 1 of the 8 octants
-        phi_vals, dphi = np.linspace( 0, pi/2.0, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2.0, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2.0, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2.0, num_theta, endpoint=False, retstep=True )
 
         size = self.pargs['num_points_realspace']
         extent = 1.1*self.pargs['radius'] # Size of the box that contains the shape
@@ -1514,8 +1516,8 @@ class SuperballNanoObject(NanoObject):
         """
         
         # Because of symmetry, we only have to measure 1 of the 8 octants
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi/2, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi/2, num_theta, endpoint=False, retstep=True )
         
         
         P = 0.0
@@ -1585,7 +1587,7 @@ class SphereNanoObject(NanoObject):
         given real-space coordinates."""
         
         R = self.pargs['radius']
-        r = sqrt( in_x**2 + in_y**2 + in_z**2 )
+        r = np.sqrt( in_x**2 + in_y**2 + in_z**2 )
         
         if r<R:
             return 1.0
@@ -1597,14 +1599,14 @@ class SphereNanoObject(NanoObject):
         """Returns the complex-amplitude of the form factor at the given
         q-coordinates."""
         
-        q = sqrt( qx**2 + qy**2 + qz**2 )
+        q = np.sqrt( qx**2 + qy**2 + qz**2 )
         
         if q in self.form_factor_already_computed and self.pargs['cache_results']:
             return self.form_factor_already_computed[q]
         
         R = self.pargs['radius']
         qR = q*R
-        volume = (4.0/3.0)*pi*(R**3)
+        volume = (4.0/3.0)*np.pi*(R**3)
 
         if q==0:
             return self.pargs['delta_rho']*volume
@@ -1621,7 +1623,7 @@ class SphereNanoObject(NanoObject):
     def form_factor_array(self, qx, qy, qz):
 
         R = self.pargs['radius']
-        volume = (4.0/3.0)*pi*(R**3)
+        volume = (4.0/3.0)*np.pi*(R**3)
         qR = R*np.sqrt( qx**2 + qy**2 + qz**2 )
 
         F = np.zeros( (len(qx)), dtype=np.complex )
@@ -1636,7 +1638,7 @@ class SphereNanoObject(NanoObject):
     def form_factor_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the particle form factor, averaged over every possible orientation."""
 
-        return 4*pi * self.form_factor( q, 0, 0)
+        return 4*np.pi * self.form_factor( q, 0, 0)
 
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
@@ -1650,12 +1652,12 @@ class SphereNanoObject(NanoObject):
 
         R = self.pargs['radius']
         qR = q*R
-        volume = (4.0/3.0)*pi*(R**3)
+        volume = (4.0/3.0)*np.pi*(R**3)
 
         if q==0:
-            return 4*pi*( (self.pargs['delta_rho']*volume)**2 )
+            return 4*np.pi*( (self.pargs['delta_rho']*volume)**2 )
 
-        prefactor = 36*pi*( (self.pargs['delta_rho']*volume)**2 )/(qR**6)
+        prefactor = 36*np.pi*( (self.pargs['delta_rho']*volume)**2 )/(qR**6)
 
         P = prefactor*( (sin(qR)-qR*cos(qR))**2 )
         
@@ -1673,15 +1675,15 @@ class SphereNanoObject(NanoObject):
         
         R = self.pargs['radius']
         
-        volume = (4.0/3.0)*pi*(R**3)
+        volume = (4.0/3.0)*np.pi*(R**3)
 
-        prefactor = 36*pi*( (self.pargs['delta_rho']*volume)**2 )
+        prefactor = 36*np.pi*( (self.pargs['delta_rho']*volume)**2 )
 
 
         P = np.empty( (len(q_list)) )
         for i, q in enumerate(q_list):
             if q==0:
-                P[i] = 4*pi*( (self.pargs['delta_rho']*volume)**2 )
+                P[i] = 4*np.pi*( (self.pargs['delta_rho']*volume)**2 )
             else:
                 P[i] = prefactor*( (sin(q*R)-q*R*cos(q*R))**2 )/((q*R)**6)
 
@@ -1744,7 +1746,7 @@ class PyramidNanoObject(NanoObject):
         
         if self.pargs['height']==None and self.pargs['pyramid_face_angle']==None:
             # Assume user wants a 'regular' pyramid
-            self.pargs['height'] = sqrt(2.0)*self.pargs['radius']
+            self.pargs['height'] = np.sqrt(2.0)*self.pargs['radius']
             self.pargs['pyramid_face_angle'] = 54.7356
 
         # Set defaults
@@ -1783,12 +1785,23 @@ class PyramidNanoObject(NanoObject):
     def thresh_near_zero(self, values, threshold=1e-7):
         
         # Catch values that are exactly zero
-        idx = np.where( values==0.0 )
-        values[idx] = +threshold
-
-        idx = np.where( abs(values)<threshold )
-        values[idx] = np.sign(values[idx])*threshold
-        
+        # test for values being a value or array
+        values = np.array(values)
+        if values.ndim > 0:
+            idx = np.where( values==0.0 )
+            if len(idx[0]) > 0:
+                values[idx] = +threshold
+    
+            idx = np.where( abs(values)<threshold )
+            if len(idx[0]) > 0:
+                values[idx] = np.sign(values[idx])*threshold
+        else:
+            # if not array, return rather than modify variable
+            if values ==0.0:
+                values = values + threshold
+            elif np.abs(values) < threshold:
+                values = np.sign(values)*threshold
+            return values
         
 
     def form_factor(self, qx, qy, qz):
@@ -1886,8 +1899,8 @@ class PyramidNanoObject(NanoObject):
         
         # Note that we only integrate one of the 4 quadrants, since they are all identical
         # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         
         P = 0.0
@@ -1921,8 +1934,8 @@ class PyramidNanoObject(NanoObject):
         
         # Note that we only integrate one of the 4 quadrants, since they are all identical
         # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
         
         
         P = np.zeros( len(q_list) )
@@ -1950,7 +1963,7 @@ class PyramidNanoObject(NanoObject):
                 
                         
         if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
             
 
         return P
@@ -2003,8 +2016,8 @@ class OctahedronNanoObject(PyramidNanoObject):
         by P(q)"""
 
 
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         P = 0.0
         
@@ -2038,8 +2051,8 @@ class OctahedronNanoObject(PyramidNanoObject):
         volume = 2*(4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
         
         
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )  # Integral from +z-axis to -z-axis
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )  # Integral from +z-axis to -z-axis
         
         
         P = np.zeros( len(q_list) )
@@ -2067,7 +2080,7 @@ class OctahedronNanoObject(PyramidNanoObject):
                 
                         
         if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
 
         return P
 
@@ -2184,13 +2197,24 @@ class CylinderNanoObject(NanoObject):
             
 
     def thresh_near_zero(self, values, threshold=1e-7):
-        
-        idx = np.nonzero( abs(values)<threshold )
-        values[idx] = np.sign(values[idx])*threshold
-        
         # Catch values that are exactly zero
-        idx = np.nonzero( values==0.0 )
-        values[idx] = +threshold
+        # test for values being a value or array
+        values = np.array(values)
+        if values.ndim > 0:
+            idx = np.where( values==0.0 )
+            if len(idx[0]) > 0:
+                values[idx] = +threshold
+    
+            idx = np.where( abs(values)<threshold )
+            if len(idx[0]) > 0:
+                values[idx] = np.sign(values[idx])*threshold
+        else:
+            # if not array, return rather than modify variable
+            if values ==0.0:
+                values = values + threshold
+            elif np.abs(values) < threshold:
+                values = np.sign(values)*threshold
+            return values
 
     def get_phase(self, qx, qy, qz):
         ''' Get the phase factor from the shift'''
@@ -2240,19 +2264,30 @@ class CylinderNanoObject(NanoObject):
 
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
-        """Returns the intensity of the form factor, under the assumption
-        of random orientation of the polyhedron. In other words, we
-        average over every possible orientation. This value is denoted
-        by P(q)"""
+        """Returns the intensity of the form factor, under the assumption of
+        random orientation of the cylinder. In other words, we average over
+        every possible orientation. This value is denoted by P(q)"""
 
         R = self.pargs['radius']
         H = self.pargs['height']
         volume = np.pi*R**2*H
         
-        # Note that we only integrate one of the 4 quadrants, since they are all identical
-        # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        '''
+        to sample orientations properly, we need to use random variables u,v
+            uniform in the range (0,1) and set theta and phi to be:
+            theta = 2*np.pi*u
+            phi = np.arccos(2*nu-1)
+
+            I will change: theta = 2*np.pi*(u-.5)
+            for a restricted set, set theta to restricted range
+            and nu should be chosen such that cos(phimax) = 2*nu-1
+            nu = .5*(cos(phimax) + 1)
+
+            We don't need this here since this code takes dS into account
+                but could be useful in the future
+        '''
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         
         P = 0.0
@@ -2267,7 +2302,7 @@ class CylinderNanoObject(NanoObject):
                 
                 F = self.form_factor( qx, qy, qz )
                 
-                P += 4 * F*F.conjugate() * dS
+                P += F*F.conjugate() * dS
 
         return P       
 
@@ -2284,8 +2319,8 @@ class CylinderNanoObject(NanoObject):
         
         # Note that we only integrate one of the 4 quadrants, since they are all identical
         # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
         
         
         P = np.zeros( len(q_list) )
@@ -2313,7 +2348,7 @@ class CylinderNanoObject(NanoObject):
                 
                         
         if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
             
 
         return P
@@ -2453,7 +2488,7 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
             F = F + cyl.form_factor(qx,qy,qz)
 
         F *= phase
-        
+
         return F
 
 
@@ -2464,8 +2499,8 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
         by P(q)"""
 
 
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
         
         P = 0.0
         
@@ -2477,11 +2512,9 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
                 qx = -q*sin(theta)*cos(phi)
                 qy =  q*sin(theta)*sin(phi)
                 
-                Fu = super(OctahedronNanoObject, self).form_factor( qx, qy, qz )
-                Fd = super(OctahedronNanoObject, self).form_factor( qx, qy, -qz )
-                F = Fu + Fd
+                F = self.form_factor(qx, qy, qz)
                 
-                P += 4 * F*F.conjugate() * dS
+                P += F*F.conjugate() * dS
 
         return P       
 
@@ -2499,8 +2532,8 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
         volume = 2*(4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
         
         
-        phi_vals, dphi = np.linspace( 0, pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, pi, num_theta, endpoint=False, retstep=True )  # Integral from +z-axis to -z-axis
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )  # Integral from +z-axis to -z-axis
         
         
         P = np.zeros( len(q_list) )
@@ -2528,7 +2561,7 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
                 
                         
         if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*pi
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
 
         return P
 
@@ -2574,7 +2607,7 @@ class PeakShape(object):
             self.product_terms = self.requested_product_terms
 
         if self.nu>=self.lorentz_cutoff and self.nu<=self.gauss_cutoff:
-            self.gamma_nu = sqrt(pi)*Gamma( (self.nu+1)/2 )/Gamma( self.nu/2 )
+            self.gamma_nu = np.sqrt(np.pi)*gamma.Gamma( (self.nu+1)/2 )/gamma.Gamma( self.nu/2 )
             
         self.already_computed = {}
 
@@ -2587,22 +2620,22 @@ class PeakShape(object):
         if sigma==None and delta==None and fwhm==None:
             print( "WARNING: No width specified for Gaussian peak. A width has been assumed." )
             self.sigma = 0.1
-            self.delta = sqrt(8/pi)*self.sigma
-            self.fwhm = 2*sqrt(2*log(2))*self.sigma
+            self.delta = np.sqrt(8/np.pi)*self.sigma
+            self.fwhm = 2*np.sqrt(2*np.log(2))*self.sigma
         elif sigma!=None:
             # Sigma takes priority
             self.sigma = sigma
-            self.delta = sqrt(8/pi)*self.sigma
-            self.fwhm = 2*sqrt(2*log(2))*self.sigma
+            self.delta = np.sqrt(8/np.pi)*self.sigma
+            self.fwhm = 2*np.sqrt(2*np.log(2))*self.sigma
         elif fwhm!=None:
             self.fwhm = fwhm
-            self.sigma = self.fwhm/( 2*sqrt(2*log(2)) )
-            self.delta = sqrt(8/pi)*self.sigma
+            self.sigma = self.fwhm/( 2*np.sqrt(2*np.log(2)) )
+            self.delta = np.sqrt(8/np.pi)*self.sigma
         else:
             # Use delta to define peak width
             self.delta = delta
-            self.sigma = sqrt(pi/8)*self.delta
-            self.fwhm = 2*sqrt(2*log(2))*self.sigma
+            self.sigma = np.sqrt(np.pi/8)*self.delta
+            self.fwhm = 2*np.sqrt(2*np.log(2))*self.sigma
             
     def lorentzian(self, delta=None, fwhm=None):
         """Sets the peak to be a pure Lorentzian (overrides any other setting)."""
@@ -2632,25 +2665,25 @@ class PeakShape(object):
         qs = abs(qs)    # Peak is symmetric
 
         # If we've already computed this position, just use the lookup table
-        if qs in self.already_computed:
+        if len(self.already_computed) > 0 and qs in self.already_computed:
             return self.already_computed[qs]
         
         if self.nu>self.gauss_cutoff:
             # Gaussian
-            val = (2/(pi*self.delta))*exp( -(4*(qs**2))/(pi*(self.delta**2)) )
+            val = (2/(np.pi*self.delta))*np.exp( -(4*(qs**2))/(np.pi*(self.delta**2)) )
         elif self.nu<self.lorentz_cutoff:
             # Lorentzian
-            val = (self.delta/(2*pi))/(qs**2 + ((self.delta/2)**2) )
+            val = (self.delta/(2*np.pi))/(qs**2 + ((self.delta/2)**2) )
         else:
             # Brute-force the term 
-            val = (2/(pi*self.delta))
+            val = (2/(np.pi*self.delta))
             
             if self.gamma_method:
                 
                 print( "WARNING: The gamma method does not currently work." )
                 
                 # Use gamma functions
-                y = (4*(qs**2))/( (pi**2) * (self.delta**2) ) 
+                y = (4*(qs**2))/( (np.pi**2) * (self.delta**2) ) 
                 
                 # Note that this equivalence comes from the paper:
                 #   Scattering Curves of Ordered Mesoscopic Materials
@@ -2659,9 +2692,9 @@ class PeakShape(object):
                 #   (See equation 27 and last section of Appendix.)
                 # However there seems to be a typo in the paper, since it does not match the brute-force product.
                 
-                numerator = GammaComplex( (self.nu/2) + 1.0j*self.gamma_nu*y )
-                #numerator = GammaComplex( (self.nu/2) + 1.0j*self.gamma_nu*(sqrt(y)) )
-                denominator = GammaComplex( self.nu/2 )
+                numerator = gamma.GammaComplex( (self.nu/2) + 1.0j*self.gamma_nu*y )
+                #numerator = gamma.GammaComplex( (self.nu/2) + 1.0j*self.gamma_nu*(sqrt(y)) )
+                denominator = gamma.GammaComplex( self.nu/2 )
                 term = numerator/denominator
                 
                 val *= 0.9*term*term.conjugate()
@@ -2672,11 +2705,11 @@ class PeakShape(object):
                     #print n, self.nu, self.gamma_nu
                     term1 = (self.gamma_nu**2)/( (n+self.nu/2)**2 )
                     #print "  " + str(term1)
-                    term2 = (4*(qs**2))/( (pi**2) * (self.delta**2) )
+                    term2 = (4*(qs**2))/( (np.pi**2) * (self.delta**2) )
                     val *= 1/(1+term1*term2)
                 
             
-        self.already_computed[qs] = val
+        #self.already_computed[qs] = val
         
         return val
 
@@ -2855,7 +2888,7 @@ class Lattice(object):
             exit()
         
     def unit_cell_volume(self):
-        V = sqrt( 1 - (cos(self.alpha))**2 - (cos(self.beta))**2 - (cos(self.gamma))**2 + 2*cos(self.alpha)*cos(self.beta)*cos(self.gamma) )
+        V = np.sqrt( 1 - (cos(self.alpha))**2 - (cos(self.beta))**2 - (cos(self.gamma))**2 + 2*cos(self.alpha)*cos(self.beta)*cos(self.gamma) )
         V *= self.lattice_spacing_a*self.lattice_spacing_b*self.lattice_spacing_c
         
         return V
@@ -2895,17 +2928,17 @@ class Lattice(object):
         """Determines the position in reciprocal space for the given reflection."""
         
         # NOTE: This is assuming cubic/rectangular only!
-        qhkl_vector = ( 2*pi*h/(self.lattice_spacing_a), \
-                        2*pi*k/(self.lattice_spacing_b), \
-                        2*pi*l/(self.lattice_spacing_c) ) 
-        qhkl = sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+        qhkl_vector = ( 2*np.pi*h/(self.lattice_spacing_a), \
+                        2*np.pi*k/(self.lattice_spacing_b), \
+                        2*np.pi*l/(self.lattice_spacing_c) ) 
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
         
         return (qhkl, qhkl_vector)
 
     def q_hkl_length(self, h, k, l):
         qhkl, qhkl_vector = self.q_hkl(h,k,l)
         
-        qhkl = sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
         
         return qhkl
 
@@ -2977,7 +3010,7 @@ class Lattice(object):
         
         summation = 0
         for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
-            e_term = cexp( 2*pi * 1j * ( xi*h + yi*k + zi*l ) )
+            e_term = cexp( 2*np.pi * 1j * ( xi*h + yi*k + zi*l ) )
             
             # TODO: doublecheck rotation
             # (rotate qhkl based on the orientation of the particle in the unit cell; right now
@@ -3001,7 +3034,7 @@ class Lattice(object):
             
             fs = self.sum_over_objects(qhkl_vector, h, k, l)
             term1 = fs*fs.conjugate()
-            term2 = exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
             term3 = peak.val( q-qhkl )
             
             summation += (m*(f**2)) * term1.real * term2 * term3
@@ -3018,7 +3051,7 @@ class Lattice(object):
             
             fs = self.sum_over_objects(qhkl_vector, h, k, l)
             term1 = fs*fs.conjugate()
-            term2 = exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
             
             summation += (m*(f**2)) * term1.real * term2 * peak.val_array( q_list, qhkl )
         
@@ -3047,7 +3080,7 @@ class Lattice(object):
 
             i_hkl = 0
             for h, k, l, m, f, qhkl, qhkl_vector in hkl_list:
-                term2 = exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+                term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
                 self.peak_cache[i_hkl] = term2 * peak.val_array( q_list, qhkl )
                 i_hkl += 1
         
@@ -3514,10 +3547,10 @@ class HexagonalLattice(Lattice):
         """Determines the position in reciprocal space for the given reflection."""
     
         # NOTE: Valid for ideal hexagonal only
-        qhkl_vector = ( 2*pi*h/(self.lattice_spacing_a), \
-                        2*pi*(h+2*k)/(np.sqrt(3)*self.lattice_spacing_b), \
-                        2*pi*l/(self.lattice_spacing_c) ) 
-        qhkl = sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+        qhkl_vector = ( 2*np.pi*h/(self.lattice_spacing_a), \
+                        2*np.pi*(h+2*k)/(np.sqrt(3)*self.lattice_spacing_b), \
+                        2*np.pi*l/(self.lattice_spacing_c) ) 
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
         
         return (qhkl, qhkl_vector)
         
@@ -3579,17 +3612,17 @@ class BCCLattice(Lattice):
     def q_hkl(self, h, k, l):
         """Determines the position in reciprocal space for the given reflection."""
         
-        prefactor = (2*pi/self.lattice_spacing_a)
+        prefactor = (2*np.pi/self.lattice_spacing_a)
         qhkl_vector = ( prefactor*h, \
                         prefactor*k, \
                         prefactor*l ) 
-        qhkl = sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
         
         return (qhkl, qhkl_vector)
 
     def q_hkl_length(self, h, k, l):
-        prefactor = (2*pi/self.lattice_spacing_a)
-        qhkl = prefactor*sqrt( h**2 + k**2 + l**2 )
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl = prefactor*np.sqrt( h**2 + k**2 + l**2 )
         
         return qhkl
 
@@ -4314,17 +4347,17 @@ class FCCLattice(Lattice):
     def q_hkl(self, h, k, l):
         """Determines the position in reciprocal space for the given reflection."""
         
-        prefactor = (2*pi/self.lattice_spacing_a)
+        prefactor = (2*np.pi/self.lattice_spacing_a)
         qhkl_vector = ( prefactor*h, \
                         prefactor*k, \
                         prefactor*l ) 
-        qhkl = sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
         
         return (qhkl, qhkl_vector)
 
     def q_hkl_length(self, h, k, l):
-        prefactor = (2*pi/self.lattice_spacing_a)
-        qhkl = prefactor*sqrt( h**2 + k**2 + l**2 )
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl = prefactor*np.sqrt( h**2 + k**2 + l**2 )
         
         return qhkl
 
@@ -5083,6 +5116,70 @@ class SimpleCubic(Lattice):
         return self.lattice_spacing_a**3
 
 
+# Orthorhombic
+###################################################################  
+class OrthorhombicLattice(Lattice):
+    def __init__(self, objects, lattice_spacing=(1.,1.,1.), sigma_D=0.01):
+        ''' Orthorhombic lattice. 90 degrees unit vectors but variable length
+            lattice_spacing : three integers, x, y and z spacing
+                where x, y and z follow same convention as the units
+
+        '''
+        
+        self.init_containers()
+
+        self.min_objects = 1
+        self.expected_objects = 1
+        self.object_count(objects)
+
+        if len(objects)==1:
+            # Assume same object everywhere
+            self.objects = [ objects[0] ]
+        else:
+            # We only need four objects. Ignore everything else.
+            self.objects = objects[0:self.expected_objects]
+        
+        self.lattice_spacing_a = lattice_spacing[0]
+        self.lattice_spacing_b = lattice_spacing[1]
+        self.lattice_spacing_c = lattice_spacing[2]
+        self.alpha = radians(90)
+        self.beta = radians(90)
+        self.gamma = radians(90)
+        
+        self.sigma_D = sigma_D          # Lattice disorder
+        
+        # Define the lattice
+        self.symmetry = {}
+        self.symmetry['crystal family'] = 'cubic'
+        self.symmetry['crystal system'] = 'cubic'
+        self.symmetry['Bravais lattice'] = 'P'
+        self.symmetry['crystal class'] = 'hexoctahedral'
+        self.symmetry['point group'] = 'm3m'
+        self.symmetry['space group'] = 'Pm3m'                
+        
+        self.positions = ['all']
+        self.lattice_positions = ['corner']
+        
+        
+        self.lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                    ]
+        self.lattice_objects = [ self.objects[0], \
+                                ]
+                                
+
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+        
+        return 1
+
+
+
+    def unit_cell_volume(self):
+        
+        return self.lattice_spacing_a**3
+
+
 # AlternatingSimpleCubic
 ###################################################################  
 class AlternatingSimpleCubic(Lattice):
@@ -5397,7 +5494,7 @@ class MultiComponentModel(Model):
         """Returns the intensity for the given point in
         reciprocal-space."""
         
-        q = sqrt( qx**2 + qy**2 + qz**2 )
+        q = np.sqrt( qx**2 + qy**2 + qz**2 )
 
         if self.ptype=='intensity':
             return self.lattice.intensity(q, self.peak, c=self.c, background=self.background, max_hkl=self.max_hkl)
