@@ -93,6 +93,7 @@ class NanoObject(Potential):
             self.pargs['y0'] = np.copy(y0)
         if z0 is not None:
             self.pargs['z0'] = np.copy(z0)
+        self.origin = np.array([x0, y0, z0])
         
 
     def rotation_elements(self, eta, phi, theta):
@@ -121,10 +122,13 @@ class NanoObject(Potential):
         return rotation_elements
 
 
-    def rotate_coord(self, qx, qy, qz):
+    def rotate_coord(self, qx, qy, qz, rotation_matrix=None):
         """Rotates the q-vector in the way given by the internal
         rotation_matrix, which should have been set using "set_angles"
-        or the appropriate pargs (eta, phi, theta)."""
+        or the appropriate pargs (eta, phi, theta).
+        rotation_matrix is an extra after the fact rotation matrix to apply
+            after the builtin rotation elements.
+        """
         
         # slowest varying (leftermost) index is xyz selection
         q_vector = np.array( [qx, qy, qz] )
@@ -132,13 +136,42 @@ class NanoObject(Potential):
         # I use tensordot to specify exact axes for dot.
         # np.dot only dots the before fastest varying index from the left with the
         # fastest varying index on the right
-        q_rotated = np.tensordot( self.rotation_matrix, q_vector,axes=(1,0) )
+        if rotation_matrix is not None:
+            rotmat = np.tensordot(rotation_matrix, self.rotation_matrix, axes=(1,0))
+        else:
+            rotmat = self.rotation_matrix
+
+        q_rotated = np.tensordot( rotmat, q_vector,axes=(1,0) )
 
         qx = q_rotated[0]
         qy = q_rotated[1]
         qz = q_rotated[2]
         
         return qx, qy, qz
+
+    def map_coord(self, rcoord, rotation_matrix, origin=None):
+        ''' Map coordinates from the previous coordinate system to
+            this one. 
+            The slowest varying index of r is the coordinate
+            origin = None just does a rotation
+        '''
+        if rcoord.shape[0] != 3:
+            raise ValueError("Error slowest varying dimension is not coord (3)")
+
+        if origin is None:
+            x0, y0, z0 = 0, 0, 0
+        else:
+            x0, y0, z0 = origin
+           
+        # first subtract origin
+        rcoord[0] = rcoord[0] - x0
+        rcoord[1] = rcoord[1] - y0
+        rcoord[2] = rcoord[2] - z0
+
+        #next dot product
+        rcoord = np.tensordot(rotation_matrix, rcoord, axes=(1,0))
+
+        return rcoord
 
     def form_factor_numerical(self, qx, qy, qz, num_points=100, size_scale=None, rotation_elements=None):
         """This is a brute-force calculation of the form-factor, using
@@ -264,7 +297,12 @@ class NanoObject(Potential):
         # Usage:
         # pargs['form_factor_orientation_spread'] = [0, 2*pi, 0, pi] # Isotropic
         
-        # WARNING: This function essentially ignores particle orientation, since it remaps a given q_hkl to q, which is then converted back into a spread of qx, qy, qz. Thus, all q_hkl are collapsed unphysically. As such, it does not correctly account for the orientation distribution of a particle. It should only be considered a crude approximation.
+        # WARNING: This function essentially ignores particle orientation,
+        # since it remaps a given q_hkl to q, which is then converted back into
+        # a spread of qx, qy, qz. Thus, all q_hkl are collapsed unphysically.
+        # As such, it does not correctly account for the orientation
+        # distribution of a particle. It should only be considered a crude
+        # approximation.
         # TODO: Don't ignore particle orientation.
         
         # Check cache
@@ -2109,13 +2147,15 @@ class CylinderNanoObject(NanoObject):
         #self.form_factor_isotropic_already_computed = {}
         
 
-
-    def V(self, in_x, in_y, in_z, rotation_elements=None):
+    def V(self, in_x, in_y, in_z, rotation_matrix=None):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates.
         Returns 1 if in the space, 0 otherwise.
         Can be arrays.
         Rotate then translate.
+
+            rotation_matrix is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
         """
 
         in_x = np.array(in_x)
@@ -2125,18 +2165,23 @@ class CylinderNanoObject(NanoObject):
 
         R = self.pargs['radius']
         L = self.pargs['height']
-        x0 = self.pargs['x0']
-        y0 = self.pargs['y0']
-        z0 = self.pargs['z0']
-        eta = self.pargs['eta']
-        phi = self.pargs['phi']
-        theta = self.pargs['theta']
+        #x0 = self.pargs['x0']
+        #y0 = self.pargs['y0']
+        #z0 = self.pargs['z0']
+        #eta = self.pargs['eta']
+        #phi = self.pargs['phi']
+        #theta = self.pargs['theta']
 
-        in_x = in_x - x0
-        in_y = in_y - y0
-        in_z = in_z - z0
+        #if rotation_matrix is not None:
+            ##translation coordinates also need to be rotated if external rotation is set
+            #x0, y0, z0 = np.tensordot(rotation_matrix, np.array([x0, y0, z0]),axes=(1,0))
+
+        #in_x = in_x - x0
+        #in_y = in_y - y0
+        #in_z = in_z - z0
         # added rotation
-        in_x, in_y, in_z = self.rotate_coord(in_x, in_y, in_z)
+        #in_x, in_y, in_z = self.rotate_coord(in_x, in_y, in_z,rotation_matrix=rotation_matrix)
+        in_x, in_y, in_z = self.map_coord(np.array([in_x, in_y, in_z]),self.rotation_matrix,self.origin)
 
         #r = np.hypot(in_x, in_y)
         r = np.sqrt(in_x**2 + in_y**2)
@@ -2301,6 +2346,9 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
             however, each level of the object requires a recursive set of rotations
             It is best to just brute force define all the terms in one shot,
                 which I chose to do here.
+            notes about rotations:
+                - i need to dot the rotation matrix of the ocahedron with each individula
+                        cylinder's rotationo element
     """
     def __init__(self, pargs={}, seed=None):
         
@@ -2339,6 +2387,7 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
             self.pargs['z0'] = 0.0
             
         self.rotation_matrix = self.rotation_elements( self.pargs['eta'], self.pargs['phi'], self.pargs['theta'] )
+        self.origin = np.array([self.pargs['x0'], self.pargs['y0'], self.pargs['z0']])
 
         fac1 = np.sqrt(2)/2.*.5*self.pargs['height']
 
@@ -2378,12 +2427,19 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
 
     def V(self, in_x, in_y, in_z, rotation_elements=None):
         """Returns the intensity of the real-space potential at the
-        given real-space coordinates."""
+        given real-space coordinates.
+            rotation_elements is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
+        
+        """
+
+
 
         # TODO: This makes assumptions about there being no rotation
+        # need to add extra rotation of octahedron
         V = 0.
         for cyl in self.cylinderobjects:
-            V = V + cyl.V(in_x, in_y, in_z)
+            V = V + cyl.V(*self.map_coord(np.array([in_x, in_y, in_z]),self.rotation_matrix,self.origin))
         
         return V
         
