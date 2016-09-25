@@ -2134,20 +2134,24 @@ class CylinderNanoObject(NanoObject):
         if 'theta' not in self.pargs:
             self.pargs['theta'] = 0.0
         if 'x0' not in self.pargs:
-            self.pargs['x0'] = 0.0
+            x0 = 0.
+            self.pargs['x0'] = x0
         if 'y0' not in self.pargs:
-            self.pargs['y0'] = 0.0
+            y0 = 0.
+            self.pargs['y0'] = y0
         if 'z0' not in self.pargs:
-            self.pargs['z0'] = 0.0
+            z0 = 0.
+            self.pargs['z0'] = z0
             
         self.rotation_matrix = self.rotation_elements( self.pargs['eta'], self.pargs['phi'], self.pargs['theta'] )
+        self.origin = np.array([x0, y0, z0])
 
         #if 'cache_results' not in self.pargs:
             #self.pargs['cache_results' ] = True
         #self.form_factor_isotropic_already_computed = {}
         
 
-    def V(self, in_x, in_y, in_z, rotation_matrix=None):
+    def V(self, in_x, in_y, in_z):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates.
         Returns 1 if in the space, 0 otherwise.
@@ -2165,26 +2169,10 @@ class CylinderNanoObject(NanoObject):
 
         R = self.pargs['radius']
         L = self.pargs['height']
-        #x0 = self.pargs['x0']
-        #y0 = self.pargs['y0']
-        #z0 = self.pargs['z0']
-        #eta = self.pargs['eta']
-        #phi = self.pargs['phi']
-        #theta = self.pargs['theta']
 
-        #if rotation_matrix is not None:
-            ##translation coordinates also need to be rotated if external rotation is set
-            #x0, y0, z0 = np.tensordot(rotation_matrix, np.array([x0, y0, z0]),axes=(1,0))
-
-        #in_x = in_x - x0
-        #in_y = in_y - y0
-        #in_z = in_z - z0
-        # added rotation
-        #in_x, in_y, in_z = self.rotate_coord(in_x, in_y, in_z,rotation_matrix=rotation_matrix)
         in_x, in_y, in_z = self.map_coord(np.array([in_x, in_y, in_z]),self.rotation_matrix,self.origin)
 
-        #r = np.hypot(in_x, in_y)
-        r = np.sqrt(in_x**2 + in_y**2)
+        r = np.hypot(in_x, in_y)
 
         # it's an array
         result = np.zeros(in_x.shape)
@@ -2218,7 +2206,7 @@ class CylinderNanoObject(NanoObject):
         q-coordinates."""
         
         # first rotate just as for V
-        qx, qy, qz = self.rotate_coord(qx, qy, qz)
+        qx, qy, qz = self.map_coord(np.array([qx, qy, qz]), self.rotation_matrix)
         # next a translation is a phase shift
         phase = self.get_phase(qx,qy,qz)
         
@@ -2444,14 +2432,27 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
         return V
         
 
+    def get_phase(self, qx, qy, qz):
+        ''' Get the phase factor from the shift'''
+        phase = np.exp(1j*qx*self.pargs['x0'])
+        phase *= np.exp(1j*qy*self.pargs['y0'])
+        phase *= np.exp(1j*qz*self.pargs['z0'])
+
+        return phase
 
     def form_factor(self, qx, qy, qz):
         """Returns the complex-amplitude of the form factor at the given
         q-coordinates."""
+
+        qx, qy, qz = self.map_coord(np.array([qx, qy, qz]), self.rotation_matrix)
+        # next a translation is a phase shift
+        phase = self.get_phase(qx,qy,qz)
         
-        F = 0
+        F = 0 + 1j*0
         for cyl in self.cylinderobjects:
             F = F + cyl.form_factor(qx,qy,qz)
+
+        F *= phase
         
         return F
 
