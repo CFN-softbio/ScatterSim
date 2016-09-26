@@ -151,8 +151,21 @@ class NanoObject(Potential):
         
         return qx, qy, qz
 
+    def map_qcoord(self,qcoord):
+        ''' Map the reciprocal space coordinates from the parent object to
+        child object (this one).
+            The origin shift is not needed here. Translation is a phase
+                which is computed separately.
+        '''
+        return self.map_coord(qcoord,self.rotation_matrix)
+
+    def map_rcoord(self,rcoord):
+        ''' Map the real space coordinates from the parent object to 
+            child object (this one).'''
+        return self.map_coord(rcoord,self.rotation_matrix,origin=self.origin)
+
     def map_coord(self, rcoord, rotation_matrix, origin=None):
-        ''' Map coordinates from the previous coordinate system to
+        ''' Map coordinates from the parent coordinate system to
             this one. 
             The slowest varying index of r is the coordinate
             origin = None just does a rotation
@@ -2183,7 +2196,7 @@ class CylinderNanoObject(NanoObject):
         R = self.pargs['radius']
         L = self.pargs['height']
 
-        in_x, in_y, in_z = self.map_coord(np.array([in_x, in_y, in_z]),self.rotation_matrix,self.origin)
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
 
         r = np.hypot(in_x, in_y)
 
@@ -2230,7 +2243,7 @@ class CylinderNanoObject(NanoObject):
         q-coordinates."""
         
         # first rotate just as for V
-        qx, qy, qz = self.map_coord(np.array([qx, qy, qz]), self.rotation_matrix)
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
         # next a translation is a phase shift
         phase = self.get_phase(qx,qy,qz)
         
@@ -2462,7 +2475,7 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
         # need to add extra rotation of octahedron
         V = 0.
         for cyl in self.cylinderobjects:
-            V = V + cyl.V(*self.map_coord(np.array([in_x, in_y, in_z]),self.rotation_matrix,self.origin))
+            V = V + cyl.V(*self.map_rcoord(np.array([in_x, in_y, in_z])))
         
         return V
         
@@ -2479,7 +2492,7 @@ class OctahedronCylindersNanoObject(PyramidNanoObject):
         """Returns the complex-amplitude of the form factor at the given
         q-coordinates."""
 
-        qx, qy, qz = self.map_coord(np.array([qx, qy, qz]), self.rotation_matrix)
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
         # next a translation is a phase shift
         phase = self.get_phase(qx,qy,qz)
         
