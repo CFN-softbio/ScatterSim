@@ -427,31 +427,6 @@ class NanoObject(Potential):
         return F
 
 
-    '''
-    def form_factor_isotropic_array(self, q_list, num_phi=50, num_theta=50):
-        """Returns a 1D array of the isotropic form factor."""
-
-        # Using array methods is at least 2X faster
-
-        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
-        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
-
-        F = np.zeros( (len(q_list)), dtype=np.complex )
-
-        for theta in theta_vals:
-            qz =  q_list*cos(theta)
-            dS = sin(theta)*dtheta*dphi
-
-            qy_partial = q_list*sin(theta)
-            for phi in phi_vals:
-                qx = -qy_partial*cos(phi)
-                qy =  qy_partial*sin(phi)
-
-                F += self.form_factor_array(qx, qy, qz) * dS
-
-        return F
-    '''
-
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the intensity of the form factor, under the assumption
         of random orientation of the polyhedron. In other words, we
@@ -478,16 +453,6 @@ class NanoObject(Potential):
         return P
 
 
-    '''
-    def form_factor_intensity_isotropic_array(self, q_list, num_phi=50, num_theta=50):
-        """Returns a 1D array of the form factor intensity (orientation averaged)."""
-
-        P = np.zeros( (len(q_list)) )
-        for i, q in enumerate(q_list):
-            P[i] = self.form_factor_intensity_isotropic( q, num_phi=num_phi, num_theta=num_theta )
-
-        return P
-    '''
 
 
     def beta_numerator(self, q, num_phi=50, num_theta=50):
@@ -497,26 +462,11 @@ class NanoObject(Potential):
         return self.form_factor_intensity_isotropic(q, num_phi=num_phi, num_theta=num_theta)
 
 
-    '''
-    def beta_numerator_array(self, q_list, num_phi=50, num_theta=50):
-        # For a monodisperse system, this is simply P(q)
-
-        return self.form_factor_intensity_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
-
-    '''
-
     def beta_ratio(self, q, num_phi=50, num_theta=50, approx=False):
         """Returns the beta ratio: |<F(q)>|^2 / <|F(q)|^2>
         This ratio depends on polydispersity: for a monodisperse system, beta = 1 for all q."""
         return 1.0
 
-
-    '''
-    def beta_ratio_array(self, q_list, num_phi=50, num_theta=50, approx=False):
-        """Returns a 1D array of the beta ratio."""
-        beta = np.ones( len(q_list) )
-        return beta
-    '''
 
     def P_beta(self, q, num_phi=50, num_theta=50, approx=False):
         """Returns P (isotropic_form_factor_intensity) and beta_ratio.
@@ -527,17 +477,6 @@ class NanoObject(Potential):
 
         return P, beta
 
-
-'''
-    def P_beta_array(self, q_list, num_phi=50, num_theta=50, approx=False):
-        """Returns P (isotropic_form_factor_intensity) and beta_ratio.
-        This function can be highly optimized in derived classes."""
-
-        P = self.form_factor_intensity_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
-        beta = self.beta_ratio_array(q_list, num_phi=num_phi, num_theta=num_theta, approx=approx)
-
-        return P, beta
-'''
 
 
     def plot_form_factor_amplitude(self, qtuple, filename='form_factor_amplitude.png', ylog=False):
@@ -622,91 +561,6 @@ class NanoObject(Potential):
         pylab.savefig( filename )
 
         return int_list
-
-    '''
-    def plot_form_factor_intensity_isotropic(self, qtuple, filename='form_factor_intensity_isotropic.png', ylog=False, num_phi=50, num_theta=50):
-        """Outputs a plot of the intensity vs. q data. Also returns an array
-        of the intensity values.
-        qtuple - (q_initial, q_final, num_q)
-        """
-        (q_initial, q_final, num_q) = qtuple
-        # Get data
-        q_list = np.linspace( q_initial, q_final, num_q, endpoint=True )
-        #int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta )
-
-
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
-        fig.subplots_adjust(left=0.16, bottom=0.15, right=0.94, top=0.94)
-
-
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
-
-        if ylog:
-            pylab.semilogy()
-        else:
-            # Make y-axis scientific notation
-            fig.gca().yaxis.major.formatter.set_scientific(True)
-            fig.gca().yaxis.major.formatter.set_powerlimits((3,3))
-
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
-        pylab.ylabel( r'$P(q)$' )
-
-
-        xi, xf, yi, yf = pylab.axis()
-        yi, yf = ( 1e7 , 1e15 )
-        pylab.axis( [xi, xf, yi, yf] )
-
-        pylab.savefig( filename )
-
-        return int_list
-
-
-    def plot_beta_ratio(self, qtuple, filename='beta_ratio.png', ylog=False, approx=False):
-        """Outputs a plot of the beta-ratio vs. q data. Also returns an array
-        of the intensity values.
-        qtuple = (q_initial, q_final, num_q)
-        """
-        (q_initial, q_final, num_q) = qtuple
-        # Get data
-        q_list = np.linspace( q_initial, q_final, num_q, endpoint=True )
-        int_list = self.beta_ratio_array( q_list, approx=approx )
-
-
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
-        fig.subplots_adjust(left=0.16, bottom=0.15, right=0.94, top=0.94)
-
-
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
-
-        if ylog:
-            pylab.semilogy()
-        else:
-            # Make y-axis scientific notation
-            fig.gca().yaxis.major.formatter.set_scientific(True)
-            fig.gca().yaxis.major.formatter.set_powerlimits((3,3))
-
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
-        pylab.ylabel( r'$\beta(q)$' )
-
-
-
-        if not ylog:
-            xi, xf, yi, yf = pylab.axis()
-            yi = 0.0
-            yf = 1.05
-            pylab.axis( [xi, xf, yi, yf] )
-
-        pylab.savefig( filename )
-
-        return int_list
-    '''
-
 
 
     def to_string(self):
@@ -3793,35 +3647,6 @@ class SphereNanoObject(NanoObject):
 
 
 
-    def form_factor_deprecated(self, qx, qy, qz):
-        """Returns the complex-amplitude of the form factor at the given
-        q-coordinates.
-            deprecated for an array version.
-        """
-
-        q = np.sqrt( qx**2 + qy**2 + qz**2 )
-
-        #if q in self.form_factor_already_computed and self.pargs['cache_results']:
-            #return self.form_factor_already_computed[q]
-
-        R = self.pargs['radius']
-        qR = q*R
-        volume = (4.0/3.0)*np.pi*(R**3)
-
-        if q==0:
-            return self.pargs['delta_rho']*volume
-
-
-        phase = self.get_phase(qx,qy,qz)
-        F = 3.0*self.pargs['delta_rho']*volume*( ( sin(qR)-qR*cos(qR) )/( qR**3 ) ) + 0.0j
-        F *= phase
-
-        if self.pargs['cache_results']:
-            self.form_factor_already_computed[q] = F
-
-        return F
-
-
     def form_factor(self, qx, qy, qz):
         qx = np.array(qx)
         if qx.ndim == 0:
@@ -3929,9 +3754,10 @@ class PyramidNanoObject(NanoObject):
         self.pargs.update(pargs)
         self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
 
-        if self.pargs['height']==None and self.pargs['pyramid_face_angle']==None:
+        if self.pargs['height']==None:
             # Assume user wants a 'regular' pyramid
             self.pargs['height'] = np.sqrt(2.0)*self.pargs['radius']
+        if self.pargs['pyramid_face_angle']==None:
             self.pargs['pyramid_face_angle'] = 54.7356
 
         # Set defaults
@@ -3968,6 +3794,17 @@ class PyramidNanoObject(NanoObject):
         R_z = R - in_z/np.tan( np.radians(self.pargs['pyramid_face_angle']) )
         V = ((in_z < H)*(in_z > 0)*(np.abs(in_x) < np.abs(R_z))*(np.abs(in_y) < np.abs(R_z))).astype(float)
         return V
+
+    def thresh_near_zero(self, q):
+        R = self.pargs['radius']
+        H = self.pargs['height']
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
+        amod = 1.0/tan_alpha
+        volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
+
+        w = np.where(q < 1e-6)
+        if len(w[0]) > 0:
+            q[w] = self.pargs['delta_rho']*volume
 
 
     def form_factor(self, qx, qy, qz):
@@ -4008,65 +3845,11 @@ class PyramidNanoObject(NanoObject):
         K3 = np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
         K4 = -1.0j*np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + 1.0j*np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
 
-        F = (H/(qx*qy))*( K1*cos((qx-qy)*R) + K2*sin((qx-qy)*R) - K3*cos((qx+qy)*R) - K4*sin((qx+qy)*R) )
-        F *= self.pargs['delta_rho']
-
-        w = np.where((qx<1e-6)*(qy<1e-6)*(qz<1e-6))
-        if len(w[0]) > 0:
-            F[0] = self.pargs['delta_rho']*volume
-
-        return F
-
-
-    '''
-    def form_factor_array(self, qx, qy, qz):
-
-        R = self.pargs['radius']
-        H = self.pargs['height']
-        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
-        amod = 1.0/tan_alpha
-        volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
-
-        qx, qy, qz = self.rotate_coord(qx, qy, qz)
-
-
-        # NOTE: (partial kludge) The computation below will hit a divide-by-zero
-        # if qx or qy are zero. Because F is smooth near the origin, we will obtain
-        # the correct limiting value by using a small, but non-zero, value for qx/qy
-
-        w = np.where(np.abs(qx) < 1e-8)
-        if len(w[0]) > 0:
-            qx[w] = 1e-8
-        w = np.where(np.abs(qy) < 1e-8)
-        if len(w[0]) > 0:
-            qy[w] = 1e-8
-        w = np.where(np.abs(qz) < 1e-8)
-        if len(w[0]) > 0:
-            qz[w] = 1e-8
-
-        self.thresh_near_zero_array(qx)
-        self.thresh_near_zero_array(qy)
-        self.thresh_near_zero_array(qz)
-
-
-        q1 = 0.5*( (qx-qy)*amod + qz )
-        q2 = 0.5*( (qx-qy)*amod - qz )
-        q3 = 0.5*( (qx+qy)*amod + qz )
-        q4 = 0.5*( (qx+qy)*amod - qz )
-        K1 = np.sinc(q1*H/np.pi)*np.exp( +1.0j * q1*H ) + np.sinc(q2*H/np.pi)*np.exp( -1.0j * q2*H )
-        K2 = -1.0j*np.sinc(q1*H/np.pi)*np.exp( +1.0j * q1*H ) + 1.0j*np.sinc(q2*H/np.pi)*np.exp( -1.0j * q2*H )
-        K3 = np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
-        K4 = -1.0j*np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + 1.0j*np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
-
-
         F = (H/(qx*qy))*( K1*np.cos((qx-qy)*R) + K2*np.sin((qx-qy)*R) - K3*np.cos((qx+qy)*R) - K4*np.sin((qx+qy)*R) )
         F *= self.pargs['delta_rho']
-        if np.any(np.isnan(F)):
-            raise ValueError
-
 
         return F
-    '''
+
 
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
@@ -4104,58 +3887,9 @@ class PyramidNanoObject(NanoObject):
         return P
 
 
-    '''
-    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
-        """Returns the intensity of the form factor, under the assumption
-        of random orientation of the polyhedron. In other words, we
-        average over every possible orientation. This value is denoted
-        by P(q)"""
-
-        R = self.pargs['radius']
-        H = self.pargs['height']
-        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
-        amod = 1.0/tan_alpha
-        volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
-
-        # Note that we only integrate one of the 4 quadrants, since they are all identical
-        # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
 
 
-        P = np.zeros( len(q_list) )
-
-        for theta in theta_vals:
-            # When theta==0, there is nothing to contribute to integral
-            # (sin(theta)=0, so the whole integrand is zero).
-            if theta!=0:
-
-                qz =  q_list*cos(theta)
-                theta_part = dtheta*dphi*sin(theta)
-
-                # Start computing partial values
-                qy_partial =  q_list*sin(theta)
-                for phi in phi_vals:
-
-                    qx = -qy_partial*cos(phi)
-                    qy = qy_partial*sin(phi)
-
-                    F = self.form_factor_array( qx, qy, qz )
-
-                    # Factor of 8 accounts for the fact that we only integrate
-                    # one of the eight octants
-                    P += 4 * F*F.conjugate() * theta_part
-
-
-        if q_list[0]==0:
-            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
-
-
-        return P
-    '''
-
-
-# HollowPyramidNanoObject
+# HollowOctahedronNanoObject
 ###################################################################
 class HollowOctahedronNanoObject(NanoObject):
     """ Hollow octahdedron
@@ -4238,18 +3972,6 @@ class HollowOctahedronNanoObject(NanoObject):
 
         return F_outer - F_inner
 
-    '''
-    def form_factor_array(self, qx, qy, qz):
-        """Returns the complex-amplitude of the form factor at the given
-        q-coordinates."""
-
-        qx, qy, qz = self.rotate_coord(qx, qy, qz)
-        F_inner = self.inner_octa.form_factor(qx, qy, qz)
-        F_outer = self.outer_octa.form_factor(qx, qy, qz)
-
-        return F_outer - F_inner
-    '''
-
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the intensity of the form factor, under the assumption
@@ -4284,52 +4006,6 @@ class HollowOctahedronNanoObject(NanoObject):
                 P += 4 * F*F.conjugate() * dS
 
         return P
-
-
-    '''
-    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
-        """Returns the intensity of the form factor, under the assumption
-        of random orientation of the polyhedron. In other words, we
-        average over every possible orientation. This value is denoted
-        by P(q)"""
-
-
-        # Note that we only integrate one of the 4 quadrants, since they are all identical
-        # (we later multiply by 4 to compensate)
-        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
-        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
-
-
-        P = np.zeros( len(q_list) )
-
-        for theta in theta_vals:
-            # When theta==0, there is nothing to contribute to integral
-            # (sin(theta)=0, so the whole integrand is zero).
-            if theta!=0:
-
-                qz =  q_list*cos(theta)
-                theta_part = dtheta*dphi*sin(theta)
-
-                # Start computing partial values
-                qy_partial =  q_list*sin(theta)
-                for phi in phi_vals:
-
-                    qx = -qy_partial*cos(phi)
-                    qy = qy_partial*sin(phi)
-
-                    F = self.form_factor_array( qx, qy, qz )
-
-                    # Factor of 8 accounts for the fact that we only integrate
-                    # one of the eight octants
-                    P += 4 * F*F.conjugate() * theta_part
-
-
-        #if q_list[0]==0:
-            #P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
-
-
-        return P
-    '''
 
 
 
