@@ -33,7 +33,7 @@ import numpy as np
 # Bessel functions of the first kind, orders 0 and 1
 from scipy.special import j0, j1
 
-from tqdm import tqdm
+#from tqdm import tqdm
 
 
 
@@ -193,6 +193,10 @@ class NanoObject(Potential):
             set_origin
             set_angles
             '''
+        # tmp fix for objects that dont  set origin
+        if not hasattr(self,'origin'):
+            self.set_origin(x0=self.pargs['x0'],y0=self.pargs['y0'],z0=self.pargs['z0'])
+
         return self.map_coord(rcoord,self.rotation_matrix,origin=self.origin)
 
     def map_coord(self, coord, rotation_matrix, origin=None):
@@ -335,8 +339,8 @@ class NanoObject(Potential):
         """Returns the particle form factor, averaged over every possible orientation."""
 
         # Check cache
-        if self.pargs['cache_results'] and q in self.form_factor_isotropic_already_computed:
-            return self.form_factor_isotropic_already_computed[q]
+        #if self.pargs['cache_results'] and q in self.form_factor_isotropic_already_computed:
+            #return self.form_factor_isotropic_already_computed[q]
 
         phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
         theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
@@ -355,8 +359,8 @@ class NanoObject(Potential):
 
 
         # Update cache
-        if self.pargs['cache_results']:
-            self.form_factor_isotropic_already_computed[q] = F
+        #if self.pargs['cache_results']:
+            #self.form_factor_isotropic_already_computed[q] = F
 
         return F
 
@@ -423,6 +427,7 @@ class NanoObject(Potential):
         return F
 
 
+    '''
     def form_factor_isotropic_array(self, q_list, num_phi=50, num_theta=50):
         """Returns a 1D array of the isotropic form factor."""
 
@@ -445,6 +450,7 @@ class NanoObject(Potential):
                 F += self.form_factor_array(qx, qy, qz) * dS
 
         return F
+    '''
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the intensity of the form factor, under the assumption
@@ -472,6 +478,7 @@ class NanoObject(Potential):
         return P
 
 
+    '''
     def form_factor_intensity_isotropic_array(self, q_list, num_phi=50, num_theta=50):
         """Returns a 1D array of the form factor intensity (orientation averaged)."""
 
@@ -480,6 +487,7 @@ class NanoObject(Potential):
             P[i] = self.form_factor_intensity_isotropic( q, num_phi=num_phi, num_theta=num_theta )
 
         return P
+    '''
 
 
     def beta_numerator(self, q, num_phi=50, num_theta=50):
@@ -489,11 +497,13 @@ class NanoObject(Potential):
         return self.form_factor_intensity_isotropic(q, num_phi=num_phi, num_theta=num_theta)
 
 
+    '''
     def beta_numerator_array(self, q_list, num_phi=50, num_theta=50):
         # For a monodisperse system, this is simply P(q)
 
         return self.form_factor_intensity_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
 
+    '''
 
     def beta_ratio(self, q, num_phi=50, num_theta=50, approx=False):
         """Returns the beta ratio: |<F(q)>|^2 / <|F(q)|^2>
@@ -501,11 +511,12 @@ class NanoObject(Potential):
         return 1.0
 
 
+    '''
     def beta_ratio_array(self, q_list, num_phi=50, num_theta=50, approx=False):
         """Returns a 1D array of the beta ratio."""
         beta = np.ones( len(q_list) )
         return beta
-
+    '''
 
     def P_beta(self, q, num_phi=50, num_theta=50, approx=False):
         """Returns P (isotropic_form_factor_intensity) and beta_ratio.
@@ -517,6 +528,7 @@ class NanoObject(Potential):
         return P, beta
 
 
+'''
     def P_beta_array(self, q_list, num_phi=50, num_theta=50, approx=False):
         """Returns P (isotropic_form_factor_intensity) and beta_ratio.
         This function can be highly optimized in derived classes."""
@@ -525,6 +537,7 @@ class NanoObject(Potential):
         beta = self.beta_ratio_array(q_list, num_phi=num_phi, num_theta=num_theta, approx=approx)
 
         return P, beta
+'''
 
 
     def plot_form_factor_amplitude(self, qtuple, filename='form_factor_amplitude.png', ylog=False):
@@ -610,6 +623,7 @@ class NanoObject(Potential):
 
         return int_list
 
+    '''
     def plot_form_factor_intensity_isotropic(self, qtuple, filename='form_factor_intensity_isotropic.png', ylog=False, num_phi=50, num_theta=50):
         """Outputs a plot of the intensity vs. q data. Also returns an array
         of the intensity values.
@@ -618,7 +632,7 @@ class NanoObject(Potential):
         (q_initial, q_final, num_q) = qtuple
         # Get data
         q_list = np.linspace( q_initial, q_final, num_q, endpoint=True )
-        int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta )
+        #int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta )
 
 
         pylab.rcParams['axes.labelsize'] = 30
@@ -691,6 +705,7 @@ class NanoObject(Potential):
         pylab.savefig( filename )
 
         return int_list
+    '''
 
 
 
@@ -737,8 +752,23 @@ class NanoObject(Potential):
 ###################################################################
 class PolydisperseNanoObject(NanoObject):
     """Defines a polydisperse nano-object, which has a distribution in
-    size ('radius') of width 'sigma_R'."""
+    size ('radius') of width 'sigma_R'
 
+    For objects with more parameters, you may specify these extra
+    paramters:
+        height, sigma_H : object height, and sdev in height
+        sigma_theta_x : object tilt from x axis
+        sigma_theta_y : object tilt from y axis
+        sigma_theta_z : object tilt from z axis
+
+    Note : this is slow, but more general. If slow, it may be worth hard
+    coding the form factor (if  not too complex).
+
+    distribution type will be the same for all parameters unfortunately.
+    Perhaps define different instances of the object for different
+    distributions.
+
+    ."""
 
     def __init__(self, baseNanoObjectClass, pargs={}, seed=None):
 
@@ -746,7 +776,25 @@ class PolydisperseNanoObject(NanoObject):
 
         # Set defaults
         if 'sigma_R' not in self.pargs:
-            self.pargs['sigma_R'] = 0.01
+            self.pargs['sigma_R'] = 0.
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.
+        if 'x0' not in self.pargs:
+            self.pargs['x0'] = 0.
+        if 'y0' not in self.pargs:
+            self.pargs['y0'] = 0.
+        if 'z0' not in self.pargs:
+            self.pargs['z0'] = 0.
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.
+        if 'sigma_H' not in self.pargs:
+            self.pargs['sigma_H'] = 0.
+        if 'sigma_theta_x' not in self.pargs:
+            self.pargs['sigma_theta_x'] = 0.
+        if 'sigma_theta_y' not in self.pargs:
+            self.pargs['sigma_theta_y'] = 0.
+        if 'sigma_theta_z' not in self.pargs:
+            self.pargs['sigma_theta_z'] = 0.
         if 'distribution_type' not in self.pargs:
             self.pargs['distribution_type'] = 'gaussian'
         if 'distribution_num_points' not in self.pargs:
@@ -861,6 +909,24 @@ class PolydisperseNanoObject(NanoObject):
 
             self.form_factor_already_computed[qx][qy][qz] = value
 
+    def V(self,x,y,z):
+        """Returns the average volume"""
+
+        #found, v = self.get_cache_form_factor(qx, qy, qz)
+        #if found:
+            #return v
+
+        v = np.zeros_like(x)
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.V(x, y, z)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+        return v/cts
+
 
     def form_factor(self, qx, qy, qz):
         """Returns the complex-amplitude of the form factor at the given
@@ -871,13 +937,17 @@ class PolydisperseNanoObject(NanoObject):
             #return v
 
         v = 0.0
+        cts = 0.
         for R, dR, wt, curNanoObject in self.distribution():
             v_R = curNanoObject.form_factor(qx, qy, qz)
             v += wt*v_R*dR
+            cts += wt*dR
 
         self.set_cache_form_factor(qx, qy, qz, v)
+        if cts ==0.:
+            raise ValueError
 
-        return v
+        return v/cts
 
 
     def form_factor_array(self, qx, qy, qz):
@@ -885,11 +955,748 @@ class PolydisperseNanoObject(NanoObject):
         q-coordinates."""
 
         v = np.zeros(len(qx))
+        cnts = 0.
         for R, dR, wt, curNanoObject in self.distribution():
             v_R = curNanoObject.form_factor_array(qx, qy, qz)
             v += wt*v_R*dR
+            cnts += wt*dR
 
-        return v
+        if cts ==0.:
+            raise ValueError
+
+        return v/cts
+
+
+    def form_factor_squared(self, qx, qy, qz):
+        """Returns the square of the form factor."""
+        v = 0.0
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_squared(qx, qy, qz)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+
+        return v/cts
+
+
+    def form_factor_intensity(self, qx, qy, qz):
+        """Returns the intensity of the form factor."""
+        v = 0.0
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_intensity(qx, qy, qz)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+        return v/cts
+
+
+    def form_factor_isotropic(self, q, num_phi=50, num_theta=50):
+        v = 0.0
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_isotropic(q, num_phi=num_phi, num_theta=num_theta)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+
+        return v/cts
+
+
+    def form_factor_isotropic_array(self, q_list, num_phi=50, num_theta=50):
+        v = 0.0
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+
+        return v/cts
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+        # Check cache
+        if self.pargs['cache_results'] and q in self.form_factor_intensity_isotropic_already_computed:
+            return self.form_factor_intensity_isotropic_already_computed[q]
+
+        v = 0.0
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_intensity_isotropic(q, num_phi=num_phi, num_theta=num_theta)
+            v += wt*v_R*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+
+        # Update cache
+        if self.pargs['cache_results']:
+            self.form_factor_intensity_isotropic_already_computed[q] = v
+
+        return v/cts
+
+
+    def form_factor_intensity_isotropic_array(self, q_list, num_phi=50, num_theta=50):
+        # Check cache
+        if self.pargs['cache_results'] and arrays_equal( q_list, self.form_factor_intensity_isotropic_array_already_computed_qlist ):
+            return self.form_factor_intensity_isotropic_array_already_computed
+
+        v = np.zeros(len(q_list))
+        cts = 0.
+        for R, dR, wt, curNanoObject in self.distribution():
+            v_R = curNanoObject.form_factor_intensity_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
+            v += wt*v_R.astype(float)*dR
+            cts += wt*dR
+
+        if cts ==0.:
+            raise ValueError
+
+        if self.pargs['cache_results']:
+            self.form_factor_intensity_isotropic_array_already_computed_qlist = q_list
+            self.form_factor_intensity_isotropic_array_already_computed = v
+
+        return v/cts
+
+
+
+    def beta_numerator(self, q, num_phi=50, num_theta=50):
+        """Returns the numerator of the beta ratio: |<F(q)>|^2"""
+
+        if self.pargs['cache_results'] and q in self.beta_numerator_already_computed:
+            return self.beta_numerator_already_computed[q]
+
+        if self.pargs['iso_external']:
+            G = self.beta_numerator_iso_external( q, num_phi=num_phi, num_theta=num_theta )
+
+        else:
+
+            # TODO: Check this code. (Bug suspected, since beta ends up being >1.)
+
+            F = self.form_factor_isotropic( q, num_phi=num_phi, num_theta=num_theta)
+            G = F*F.conjugate()
+
+            # Note that we have to divide by 4*pi
+            # This is because the spherical integration inside the ||^2, so the
+            # surface area term gets squared, to (4*pi)^2
+            G = G.real/(4*np.pi)
+
+        if self.pargs['cache_results']:
+            self.beta_numerator_already_computed[q] = G
+
+        return G
+
+
+    def beta_numerator_array(self, q_list, num_phi=50, num_theta=50):
+
+        if self.pargs['cache_results'] and arrays_equal( q_list, self.beta_numerator_array_already_computed_qlist ):
+            return self.beta_numerator_array_already_computed
+
+        if self.pargs['iso_external']:
+            G = self.beta_numerator_iso_external_array( q_list, num_phi=num_phi, num_theta=num_theta )
+
+        else:
+            F = self.form_factor_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta)
+            G = F*F.conjugate()
+
+            # Note that we have to divide by 4*pi
+            # This is because the spherical integration inside the ||^2, so the
+            # surface area term gets squared, to (4*pi)^2
+            G = G.real/(4*np.pi)
+
+        if self.pargs['cache_results']:
+            self.beta_numerator_array_already_computed_qlist = q_list
+            self.beta_numerator_array_already_computed = G
+
+        return G
+
+
+    def beta_numerator_iso_external(self, q, num_phi=50, num_theta=50):
+        """Calculates the beta numerator under the assumption that the orientational
+        averaging is done last. That is, instead of calculating |<<F>>_iso|^2, we
+        calculate <|<F>|^2>_iso """
+
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+        G = 0.0
+
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            qy_partial = q*sin(theta)
+            for phi in phi_vals:
+                qx = -qy_partial*cos(phi)
+                qy =  qy_partial*sin(phi)
+
+                F = self.form_factor(qx, qy, qz)
+                F2 = F*F.conjugate()
+                G += F2.real * dS
+
+        return G
+
+
+    def beta_numerator_iso_external_array__replaced__(self, q_list, num_phi=50, num_theta=50):
+
+        G = np.zeros(len(q_list))
+
+        for i, q in enumerate(q_list):
+            G[i] = self.beta_numerator_iso_external(q, num_phi=num_phi, num_theta=num_theta)
+
+        return G
+
+
+    def beta_numerator_iso_external_array(self, q_list, num_phi=50, num_theta=50):
+        """Calculates the beta numerator under the assumption that the orientational
+        averaging is done last. That is, instead of calculating |<<F>>_iso|^2, we
+        calculate <|<F>|^2>_iso """
+
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+        G = np.zeros(len(q_list))
+
+        for theta in theta_vals:
+            qz =  q_list*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            qy_partial = q_list*sin(theta)
+            for phi in phi_vals:
+                qx = -qy_partial*cos(phi)
+                qy =  qy_partial*sin(phi)
+
+                F = self.form_factor_array(qx, qy, qz)
+
+                F2 = F*F.conjugate()
+                G += F2.real * dS
+
+        return G
+
+
+    def beta_ratio(self, q, num_phi=50, num_theta=50, approx=False):
+        """Returns the beta ratio: |<F(q)>|^2 / <|F(q)|^2>
+        This ratio depends on polydispersity: for a monodisperse system, beta = 1 for all q."""
+
+        if approx:
+            radius = self.pargs['radius']
+            sigma_R = self.pargs['sigma_R']
+            beta = np.exp( -( (radius*sigma_R*q)**2 ) )
+            return beta
+        else:
+            P, beta = self.P_beta( q, num_phi=num_phi, num_theta=num_theta )
+            return beta
+
+
+    def beta_ratio_array(self, q_list, num_phi=50, num_theta=50, approx=False):
+        """Returns a 1D array of the beta ratio."""
+
+        if approx:
+            radius = self.pargs['radius']
+            sigma_R = self.pargs['sigma_R']
+            beta = np.exp( -( (radius*sigma_R*q_list)**2 ) )
+            return beta
+        else:
+            P, beta = self.P_beta_array( q_list, num_phi=num_phi, num_theta=num_theta )
+
+            return beta
+
+
+    def P_beta(self, q, num_phi=50, num_theta=50, approx=False):
+        """Returns P (isotropic_form_factor_intensity) and beta_ratio.
+        This function can be highly optimized in derived classes."""
+
+        if self.pargs['cache_results'] and q in self.P_beta_already_computed:
+            return self.P_beta_already_computed[q]
+
+        P = self.form_factor_intensity_isotropic(q, num_phi=num_phi, num_theta=num_theta)
+
+        if approx:
+            radius = self.pargs['radius']
+            sigma_R = self.pargs['sigma_R']
+            beta = np.exp( -( (radius*sigma_R*q)**2 ) )
+            return beta
+        else:
+            G = self.beta_numerator(q, num_phi=num_phi, num_theta=num_theta)
+            beta = G/P
+
+        if self.pargs['cache_results']:
+            self.P_beta_already_computed[q] = P, beta
+
+        return P, beta
+
+
+    def P_beta_array(self, q_list, num_phi=50, num_theta=50, approx=False):
+        """Returns P (isotropic_form_factor_intensity) and beta_ratio.
+        This function can be highly optimized in derived classes."""
+
+        if self.pargs['cache_results'] and arrays_equal( q_list, self.P_beta_array_already_computed_qlist ):
+            return self.P_beta_array_already_computed
+
+        P = self.form_factor_intensity_isotropic_array(q_list, num_phi=num_phi, num_theta=num_theta)
+
+        if approx:
+            radius = self.pargs['radius']
+            sigma_R = self.pargs['sigma_R']
+            beta = np.exp( -( (radius*sigma_R*q_list)**2 ) )
+        else:
+            G = self.beta_numerator_array(q_list, num_phi=num_phi, num_theta=num_theta)
+            beta = G/P
+
+        if self.pargs['cache_results']:
+            self.P_beta_array_already_computed_qlist = q_list
+            self.P_beta_array_already_computed = P, beta
+
+        return P, beta
+
+class PolydisperseOrientSpreadNanoObject(NanoObject):
+    """Defines a polydisperse orientational spread nano-object, which has a distribution in
+    size ('radius') of width 'sigma_R'
+
+    For objects with more parameters, you may specify these extra
+    paramters:
+        height, sigma_H : object height, and sdev in height
+        sigma_theta_x : object tilt from x axis
+        sigma_theta_y : object tilt from y axis
+        sigma_theta_z : object tilt from z axis
+
+    Note : this is slow, but more general. If slow, it may be worth hard
+    coding the form factor (if  not too complex).
+
+    distribution type will be the same for all parameters unfortunately.
+    Perhaps define different instances of the object for different
+    distributions.
+
+    Note this code can be greatly sped up if we can assume that P(q) = P(qx,qy)*P(qz)
+        See the rod code for example.
+    TODO : make the rod code include rotations like in here
+
+    ."""
+
+    def __init__(self, baseNanoObjectClass, pargs={}, seed=None):
+
+        NanoObject.__init__(self, pargs=pargs, seed=seed)
+
+        # Set defaults
+        if 'sigma_R' not in self.pargs:
+            self.pargs['sigma_R'] = 0.
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.
+        if 'sigma_H' not in self.pargs:
+            self.pargs['sigma_H'] = 0.
+        if 'sigma_theta_x' not in self.pargs:
+            self.pargs['sigma_theta_x'] = 0.
+        if 'sigma_theta_y' not in self.pargs:
+            self.pargs['sigma_theta_y'] = 0.
+        if 'sigma_theta_z' not in self.pargs:
+            self.pargs['sigma_theta_z'] = 0.
+        if 'distribution_type' not in self.pargs:
+            self.pargs['distribution_type'] = 'gaussian'
+        if 'distribution_num_points' not in self.pargs:
+            self.pargs['distribution_num_points'] = 5
+        if 'iso_external' not in self.pargs:
+            self.pargs['iso_external'] = False
+
+
+        self.baseObject = baseNanoObjectClass(pargs=pargs)
+
+        self.distribution_list = []
+
+
+        self.pargs['cache_results'] = False
+
+        self.form_factor_already_computed = {}
+        self.form_factor_intensity_isotropic_already_computed = {}
+
+        self.form_factor_intensity_isotropic_array_already_computed_qlist = []
+        self.form_factor_intensity_isotropic_array_already_computed = []
+
+        self.beta_numerator_already_computed = {}
+        self.beta_numerator_array_already_computed_qlist = []
+        self.beta_numerator_array_already_computed = []
+
+        self.P_beta_already_computed = {}
+        self.P_beta_array_already_computed_qlist = []
+        self.P_beta_array_already_computed = []
+
+
+    def rebuild(self, pargs={}, seed=None):
+        """Allows the object to have its potential
+        arguments (pargs) updated. Note that this doesn't
+        replace the old pargs entirely. It only modifies
+        (or adds) the key/values provided by the new pargs."""
+        self.pargs.update(pargs)
+
+        if seed:
+            self.seed=seed
+
+        self.form_factor_already_computed = {}
+        self.form_factor_intensity_isotropic_already_computed = {}
+
+        self.form_factor_intensity_isotropic_array_already_computed_qlist = []
+        self.form_factor_intensity_isotropic_array_already_computed = []
+
+        self.beta_numerator_already_computed = {}
+        self.beta_numerator_array_already_computed_qlist = []
+        self.beta_numerator_array_already_computed = []
+
+        self.P_beta_already_computed = {}
+        self.P_beta_array_already_computed_qlist = []
+        self.P_beta_array_already_computed = []
+
+        self.distribution_list = []
+
+    def distribution_gaussian(self, x0, sigma_x, num_points=100, spread=2.5,positive=True):
+        ''' Gaussian distribution. Here, assumes that x can only be positive.
+            Chooses a range of X and provides its weights. Normalizes by
+            the total sum rather than the probability distribution.
+            This is really a Gaussian prob dist with cutoff.
+            sigma_x : standard deviation
+            positive : assumes x can only be positive (useful for radii etc, not for angles)
+        '''
+        # Note, I don't think we need dX since I normalize wts by its
+        # sum which also would have a delta X factor in it
+        if positive:
+            Xs = np.linspace(np.maximum(0,x0-spread*sigma_x),
+                             x0+spread*sigma_x, num_points)
+        else:
+            Xs = np.linspace(x0-spread*sigma_x, x0+spread*sigma_x, num_points)
+
+        # Gaussian weights
+        wts = np.exp( - (Xs-x0)**2/(2*( sigma_x**2 ) ) )
+        # should be normalized to 1
+        wts /= np.sum(wts)
+
+        return Xs, wts
+
+    def distribution_uniform(self, x0, sigma_x, num_points=100, positive=True):
+        ''' Gaussian distribution. Here, assumes that x can only be positive.
+            Chooses a range of X and provides its weights. Normalizes by
+            the total sum rather than the probability distribution.
+            This is really a Gaussian prob dist with cutoff.
+            sigma_x : percentage standard deviation
+        '''
+        # Note, I don't think we need dX since I normalize wts by its
+        # sum which also would have a delta X factor in it
+        if positive:
+            Xs = np.linspace(np.maximum(0,x0-sigma_x), x0 + sigma_x,
+                             num_points)
+        else:
+            Xs = np.linspace(x0-sigma_x, x0+sigma_x, num_points)
+
+        # uniform weights
+        wts = np.ones_like(Xs)
+        # should be normalized to 1
+        wts /= np.sum(wts)
+
+        return Xs, wts
+
+    def distribution_Rs(self, num_points=100, spread=2.5):
+        ''' Get the distribution of R vectors with the normalized
+            probabilities.
+            Here I just assume a Gaussian distribution.
+        '''
+        radius = self.pargs['radius']
+        sigma_R = self.pargs['sigma_R']*radius
+        # if zero, ignore
+        if np.abs(sigma_R) < 1e-12:
+            return np.array([radius]),np.array([1])
+        dist_type = self.pargs['distribution_type']
+        if dist_type == 'gaussian':
+            return self.distribution_gaussian(radius, sigma_R,
+                                              num_points=num_points,
+                                              spread=spread)
+        elif dist_type == 'uniform':
+            return self.distribution_uniform(radius, sigma_R,
+                                              num_points=num_points,
+                                              spread=spread)
+
+    def distribution_Hs(self, num_points=100, spread=2.5):
+        ''' Get the distribution of R vectors with the normalized
+            probabilities.
+            Here I just assume a Gaussian distribution.
+            sigma_H : percentage std dev
+        '''
+        height = self.pargs['height']
+        sigma_H = self.pargs['sigma_H']*height
+        # if zero, ignore
+        if np.abs(sigma_H) < 1e-12:
+            return np.array([height]),np.array([1])
+        dist_type = self.pargs['distribution_type']
+        if dist_type == 'gaussian':
+            return self.distribution_gaussian(height, sigma_H,
+                                              num_points=num_points,
+                                              spread=spread)
+        elif dist_type == 'uniform':
+            return self.distribution_uniform(height, sigma_H,
+                                             num_points=num_points,
+                                             spread=spread)
+
+
+    def distribution_thetas(self, arg, num_points=10, spread=2.5):
+        ''' orientation distribution
+            returns theta_xs, P(theta_x)
+            useful for the orientation angles
+            arg is 'sigma_theta_x' or etc...
+
+        '''
+        # always starts at zero
+        alpha = 0.
+        # this should be in degrees
+        sigma_Alpha = self.pargs[arg]
+        # if it's practically zero, don't compute:
+        if np.abs(sigma_Alpha) < 1e-6:
+            return np.array([0]),np.array([1])
+
+        dist_type = self.pargs['distribution_type']
+        if dist_type == 'gaussian':
+            alphas, P_Alpha = self.distribution_gaussian(alpha, sigma_Alpha,
+                                                         num_points=num_points,
+                                                         spread=spread,
+                                                         positive=False)
+        elif dist_type == 'uniform':
+            alphas, P_Alpha = self.distribution_uniform(alpha, sigma_Alpha,
+                                             num_points=num_points,
+                                             spread=spread, positive=False)
+
+        # times the sin weight (see log for derivation)
+        # need to convert to radians
+        P_Alpha *= np.abs(np.sin(np.radians(alphas)))
+        # normalize to 1
+        P_Alpha /= np.sum(P_Alpha)
+
+        return alphas, P_Alpha
+
+
+    def rot_sigmaz(self, theta,phi):
+        ''' sigmaz rotation matrix (for tilts about z).
+            Y1 Z2 Y3
+            To precess need to rotate about phi axis
+        '''
+        theta = np.radians(theta)
+        phi= np.radians(phi)
+        c1 = cos(theta)
+        s1 = sin(theta)
+        c2 = cos(phi)
+        s2 = sin(phi)
+        c3 = 1.
+        s3 = 0.
+        rotmat = np.array([
+            [c1*c2*c3 - s1*s3, -c1*s2, c3*s1 +c1*c2*s3],
+            [c3*s2, c2, s2*s3],
+            [-c1*s3 -c2*c3*s1, s1*s2, c1*c3 - c2*s1*s3],
+        ])
+        return rotmat
+
+
+    def rot_sigmax(self, theta,phi):
+        ''' sigmaz rotation matrix (for tilts about z).
+            Y1 X2 Y3
+        '''
+        theta = np.radians(theta)
+        phi= np.radians(phi)
+        c1 = cos(theta)
+        s1 = sin(theta)
+        c2 = cos(phi)
+        s2 = sin(phi)
+        c3 = 1.
+        s3 = 0.
+        rotmat = np.array([
+            [c1*c3 - c1*s2*s3, s1*s2, c1*s3 +c2*c3*s1],
+            [s2*s3, c2, -c3*s2],
+            [-c3*s1 - c1*c2*s3, c1*s2, c1*c2*c3 -s1*s3]
+        ])
+        return rotmat
+
+
+    def rot_sigmay(self, theta,phi):
+        ''' sigmaz rotation matrix (for tilts about z).
+            X1 Y2 X3
+        '''
+        theta = np.radians(theta)
+        phi= np.radians(phi)
+        c1 = cos(theta)
+        s1 = sin(theta)
+        c2 = cos(phi)
+        s2 = sin(phi)
+        c3 = 1.
+        s3 = 0.
+        rotmat = np.array([
+            [c2 , s2*s3, c3*s2],
+            [s1*s2, c1*c3 - c2*s1*s3, -c1*s3 - c2*c3*s1],
+            [-c1*s2, c3*s1 + c1*c2*s3, c1*c2*c3 - s1*s3]
+        ])
+        return rotmat
+
+
+    def get_cache_form_factor(self, qx, qy, qz):
+        if qx in self.form_factor_already_computed and self.pargs['cache_results']:
+            if qy in self.form_factor_already_computed[qx]:
+                if qz in self.form_factor_already_computed[qx][qy]:
+                    return True, self.form_factor_already_computed[qx][qy][qz]
+
+        return False, 0.0
+
+
+    def set_cache_form_factor(self, qx, qy, qz, value):
+        if self.pargs['cache_results']:
+            if qx not in self.form_factor_already_computed:
+                self.form_factor_already_computed[qx] = {}
+            if qy not in self.form_factor_already_computed[qx]:
+                self.form_factor_already_computed[qx][qy] = {}
+
+            self.form_factor_already_computed[qx][qy][qz] = value
+
+
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates."""
+        # fix for non arrays need to improve later
+        qx= np.array(qx)
+        qy= np.array(qy)
+        qz= np.array(qz)
+        if qx.ndim==0:
+            qx = np.array([qx])
+            qy = np.array([qy])
+            qz = np.array([qz])
+        #threshold near zero, need to improve later
+        thresh = 1e-8
+        w = np.where(np.abs(qx) < thresh)
+        if len(w[0]) > 0:
+            qx[w] = 1e-8
+        w = np.where(np.abs(qy) < thresh)
+        if len(w[0]) > 0:
+            qy[w] = 1e-8
+        w = np.where(np.abs(qz) < thresh)
+        if len(w[0]) > 0:
+            qz[w] = 1e-8
+        # hard coded for now
+        num_points = 50
+        # save the old rotation matrix
+        rotation_matrix_orig = self.rotation_matrix
+        radius_orig = self.pargs['radius']
+        height_orig = self.pargs['height']
+        # distribution of radii to go over (could just be one elem)
+        rs, rwts = self.distribution_Rs()
+        # distribution of heights to go over (could just be one elem)
+        hs, hwts = self.distribution_Hs()
+        # this is distribution of angles to go over
+        # can specify num_points as argument
+        alphaxs, walphaxs = self.distribution_thetas('sigma_theta_x',num_points=10)
+        alphays, walphays = self.distribution_thetas('sigma_theta_y',num_points=10)
+        alphazs, walphazs = self.distribution_thetas('sigma_theta_z',num_points=10)
+
+        # chnage 10 to 100!
+        phis, wphis = self.distribution_uniform(180, 180, positive=False,num_points=100)
+
+        # I assume dr, dh, dphi, dalpha all linearly spaced for now
+        # (so they cancel out in average)
+        Pq = np.zeros(qx.shape,dtype=complex)
+
+        # number of each (could be one)
+        Nr = len(rs)
+        Nh = len(hs)
+        Nalphax = len(alphaxs)
+        Nalphay = len(alphays)
+        Nalphaz = len(alphazs)
+
+        print("preparing to calculate {} combinations...".format(3*10*100*len(hs)*len(rs)))
+        # volume in hyperdimensional probability space
+        dV = 0.
+        #loop in R
+        for r, wr in zip(rs, rwts):
+            self.pargs['radius'] = r
+            #loop in H
+            for h, wh in zip(hs, hwts):
+                self.pargs['height'] = h
+                #loop in thetax rotation
+                # hard code the rotation matrix
+                # loop in thetax, only if there is a spread in alpha
+                # (else I'm assuming alpha is zero at zero since code
+                # here makes this assumption)
+                if len(alphaxs) > 1:
+                    for alpha, walpha in zip(alphaxs, walphaxs):
+                        for phi, wphi in zip(phis, wphis):
+                            print("r: {}, h: {}, anglex: {}, phi: {}".format(r,h,alpha,phi))
+                            # hard code the rotation matrix
+                            self.baseObject.rotation_matrix = self.rot_sigmax(alpha, phi)
+                            self.baseObject.rebuild(pargs=self.pargs)
+                            weight = wr*wh*walpha*wphi*np.abs(np.sin(alpha))
+                            dV += weight
+                            Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+                else:
+                    # NOTE : this weights the code more than it should alpha=phi=0 should
+                    # *only* be computed once
+                    self.baseObject.rotation_matrix = self.rot_sigmax(0, 0)
+                    self.baseObject.rebuild(pargs=self.pargs)
+                    weight = wr*wh*1.#*walpha*wphi*np.abs(np.sin(alpha))
+                    dV += weight
+                    Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+                #loop in thetay
+                if len(alphays) > 1:
+                    for alpha, walpha in zip(alphays, walphays):
+                        for phi, wphi in zip(phis, wphis):
+                            print("r: {}, h: {}, angley: {}, phi: {}".format(r,h,alpha,phi))
+                            # hard code the rotation matrix
+                            self.baseObject.rotation_matrix = self.rot_sigmay(alpha, phi)
+                            self.baseObject.rebuild(pargs=self.pargs)
+                            weight = wr*wh*walpha*wphi*np.abs(np.sin(alpha))
+                            dV += weight
+                            Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+                else:
+                    # NOTE : this weights the code more than it should alpha=phi=0 should
+                    # *only* be computed once
+                    self.baseObject.rotation_matrix = self.rot_sigmax(0, 0)
+                    self.baseObject.rebuild(pargs=self.pargs)
+                    weight = wr*wh*1.#*walpha*wphi*np.abs(np.sin(alpha))
+                    dV += weight
+                    Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+                #loop in thetaz
+                if len(alphazs) > 1:
+                    for alpha, walpha in zip(alphazs, walphazs):
+                        for phi, wphi in zip(phis, wphis):
+                            print("r: {}, h: {}, anglez: {}, phi: {}".format(r,h,alpha,phi))
+                            # hard code the rotation matrix
+                            self.baseObject.rotation_matrix = self.rot_sigmaz(alpha, phi)
+                            self.baseObject.rebuild(pargs=self.pargs)
+                            weight = wr*wh*walpha*wphi*np.abs(np.sin(alpha))
+                            dV += weight
+                            Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+                else:
+                    # NOTE : this weights the code more than it should alpha=phi=0 should
+                    # *only* be computed once
+                    self.baseObject.rotation_matrix = self.rot_sigmax(0, 0)
+                    self.baseObject.rebuild(pargs=self.pargs)
+                    weight = wr*wh*1.#*walpha*wphi*np.abs(np.sin(alpha))
+                    dV += weight
+                    Pq += self.baseObject.form_factor(qx, qy, qz)*weight
+        # divide by all volume
+        Pq /= dV
+
+        # reset parameters back to original
+        self.baseObject.rotation_matrix = rotation_matrix_orig
+        self.baseObject.pargs['height'] = height_orig
+        self.baseObject.pargs['radius'] = radius_orig
+        self.baseObject.rebuild(pargs=self.pargs)
+
+        return Pq
 
 
     def form_factor_squared(self, qx, qy, qz):
@@ -1159,28 +1966,48 @@ class PolydisperseNanoObject(NanoObject):
 
         return P, beta
 
-# PolydisperseCylindricalObject
+# PolydisperseRodNanoObject
 ###################################################################
-class PolydisperseCylindricalObject(NanoObject):
-    """Defines a polydisperse cylindrical-shaped object, which has a
-    distribution in:
+class PolydisperseRodNanoObject(NanoObject):
+    """Defines a polydisperse anisotropic object that has a rod-like shape,
+    which has a distribution in:
         size ('radius') of width 'sigma_R' (percentage sigma).
         height ('height') of width 'sigma_H' (percentage sigma).
-        (ignore this one for now:)
-            orientation spread 'sigma_th' (percentage sigma).
+        and tilts:
+        orientation spread 'sigma_tilt_x' (percentage sigma).
+        orientation spread 'sigma_tilt_y' (percentage sigma).
+        orientation spread 'sigma_tilt_z' (percentage sigma).
+
+    Note : this doesn't have to be a cylindrical object. This could even
+    be a sphere (by setting sigma_H to 0 as well as sigma th). Still
+    experimental.
+
+    To average over orientations, a new rotation matrix will need to be
+    computed. 
 
         """
 
 
     def __init__(self, pargs={}, seed=None):
 
-        NanoObject.__init__(self, pargs=pargs, seed=seed)
+        NanoObject.__init__(self, baseObjectClass=None, pargs=pargs,
+                            seed=seed)
 
-        # Set defaults
+        # Set defaultsm no polydispersity if not set
         if 'sigma_R' not in self.pargs:
-            self.pargs['sigma_R'] = 0.01
+            self.pargs['sigma_R'] = 0.
         if 'sigma_H' not in self.pargs:
-            self.pargs['sigma_H'] = 0.01
+            self.pargs['sigma_H'] = 0.
+        if 'sigma_tilt_x' not in self.pargs:
+            self.pargs['sigma_tilt_x'] = 0.
+        if 'sigma_tilt_y' not in self.pargs:
+            self.pargs['sigma_tilt_y'] = 0.
+        if 'sigma_tilt_z' not in self.pargs:
+            self.pargs['sigma_tilt_z'] = 0.
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 0.
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 0.
         if 'distribution_type' not in self.pargs:
             self.pargs['distribution_type'] = 'gaussian'
         if 'distribution_num_points' not in self.pargs:
@@ -1201,12 +2028,14 @@ class PolydisperseCylindricalObject(NanoObject):
             self.pargs['z0'] = 0.0
 
 
-        self.baseNanoObjectClass =  []
+        if baseObjectClass is None:
+            baseObjectClass = CylindricalNanoObject
+        self.baseObject = baseObjectClass(pargs=pargs)
 
         self.distribution_list = []
 
 
-        # caching doesn't work right now
+        # caching doesn't work right now, need to resolve this later
         self.pargs['cache_results'] = False
 
         self.form_factor_already_computed = {}
@@ -1329,6 +2158,9 @@ class PolydisperseCylindricalObject(NanoObject):
         '''
         radius = self.pargs['radius']
         sigma_R = self.pargs['sigma_R']
+        # if zero, ignore
+        if np.abs(sigma_R) < 1e-12:
+            return np.array([radius]),np.array([1])
         dist_type = self.pargs['distribution_type']
         if dist_type == 'gaussian':
             return self.distribution_gaussian(radius, sigma_R,
@@ -1346,6 +2178,9 @@ class PolydisperseCylindricalObject(NanoObject):
         '''
         height = self.pargs['height']
         sigma_H = self.pargs['sigma_H']
+        # if zero, ignore
+        if np.abs(sigma_H) < 1e-12:
+            return np.array([height]),np.array([1])
         dist_type = self.pargs['distribution_type']
         if dist_type == 'gaussian':
             return self.distribution_gaussian(height, sigma_H,
@@ -1370,6 +2205,12 @@ class PolydisperseCylindricalObject(NanoObject):
                 4. average over this range each component
                 5. finally, linearly interpolate
         '''
+        qx = np.array(qx)
+        # quick fix for one point calculations
+        if qx.ndim==0:
+            qx = np.array([qx])
+            qy = np.array([qy])
+            qz = np.array([qz])
         # hard coded, number of points for interpolation, usually 1000 is not so crazy
         Q_interp_points = 1000
 
@@ -2056,7 +2897,8 @@ class PolydisperseOrientationSpreadCylindricalObject(NanoObject):
         alphas, phis, P_Alpha, P_Phi = self.distribution_Alphas(num_points=num_points)
         F = np.zeros_like(qr,dtype=complex)
         # now average over orientation < < < F >_r >_h >_o
-        for i in tqdm(range(len(alphas))):
+        #for i in tqdm(range(len(alphas))):
+        for i in range(len(alphas)):
             for j in range(len(phis)):
                 # rotate the coordinates
                 rotmat = self.rotation_elements(0, alphas[i], phis[j])
@@ -2144,7 +2986,8 @@ class PolydisperseOrientationSpreadCylindricalObject(NanoObject):
         alphas, phis, P_Alpha, P_Phi = self.distribution_Alphas()
         F = np.zeros_like(qr)
         # now average over orientation < < < F >_r >_h >_o
-        for i in tqdm(range(len(alphas))):
+        #for i in tqdm(range(len(alphas))):
+        for i in range(len(alphas)):
             for j in range(len(phis)):
                 # rotate the coordinates
                 rotmat = self.rotation_elements(0, alphas[i], phis[j])
@@ -2943,19 +3786,18 @@ class SphereNanoObject(NanoObject):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates."""
 
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
         R = self.pargs['radius']
         r = np.sqrt( in_x**2 + in_y**2 + in_z**2 )
-
-        if r<R:
-            return 1.0
-        else:
-            return 0.0
+        return (r < R).astype(float)
 
 
-    ''' deprecated
-    def form_factor(self, qx, qy, qz):
+
+    def form_factor_deprecated(self, qx, qy, qz):
         """Returns the complex-amplitude of the form factor at the given
-        q-coordinates."""
+        q-coordinates.
+            deprecated for an array version.
+        """
 
         q = np.sqrt( qx**2 + qy**2 + qz**2 )
 
@@ -2978,14 +3820,20 @@ class SphereNanoObject(NanoObject):
             self.form_factor_already_computed[q] = F
 
         return F
-    '''
 
 
     def form_factor(self, qx, qy, qz):
+        qx = np.array(qx)
+        if qx.ndim == 0:
+            qx = np.array([qx])
+            qy = np.array([qy])
+            qz = np.array([qz])
 
         R = self.pargs['radius']
         volume = (4.0/3.0)*np.pi*(R**3)
         qR = R*np.sqrt( qx**2 + qy**2 + qz**2 )
+        # threshold to avoid zero values
+        qR = np.maximum(1e-8, qR)
 
         F = np.zeros( (len(qx)), dtype=np.complex )
         #for i, qxi in enumerate(qx):
@@ -3002,37 +3850,18 @@ class SphereNanoObject(NanoObject):
         return 4*np.pi * self.form_factor( q, 0, 0)
 
 
-    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+    def form_factor_intensity_isotropic(self, q_list, num_phi=50, num_theta=50):
         """Returns the intensity of the form factor, under the assumption
         of random orientation of the polyhedron. In other words, we
         average over every possible orientation. This value is denoted
         by P(q)"""
+        q_list = np.array(q_list)
 
-        if q in self.form_factor_intensity_isotropic_already_computed and self.pargs['cache_results']:
-            return self.form_factor_intensity_isotropic_already_computed[q]
+        if q_list.ndim == 0:
+            q_list = np.array([q_list])
 
-        R = self.pargs['radius']
-        qR = q*R
-        volume = (4.0/3.0)*np.pi*(R**3)
-
-        if q==0:
-            return 4*np.pi*( (self.pargs['delta_rho']*volume)**2 )
-
-        prefactor = 36*np.pi*( (self.pargs['delta_rho']*volume)**2 )/(qR**6)
-
-        P = prefactor*( (sin(qR)-qR*cos(qR))**2 )
-
-        if self.pargs['cache_results']:
-            self.form_factor_intensity_isotropic_already_computed[q] = P
-
-        return P
-
-
-    def form_factor_intensity_isotropic_array(self, q_list, num_phi=50, num_theta=50):
-        """Returns the intensity of the form factor, under the assumption
-        of random orientation of the polyhedron. In other words, we
-        average over every possible orientation. This value is denoted
-        by P(q)"""
+        # threshold
+        q = np.maximum(np.abs(q_list),1e-8)
 
         R = self.pargs['radius']
 
@@ -3042,11 +3871,7 @@ class SphereNanoObject(NanoObject):
 
 
         P = np.empty( (len(q_list)) )
-        for i, q in enumerate(q_list):
-            if q==0:
-                P[i] = 4*np.pi*( (self.pargs['delta_rho']*volume)**2 )
-            else:
-                P[i] = prefactor*( (sin(q*R)-q*R*cos(q*R))**2 )/((q*R)**6)
+        P = prefactor*( (np.sin(q_list*R)-q_list*R*np.cos(q_list*R))**2 )/((q_list*R)**6)
 
         return P
 
@@ -3131,42 +3956,26 @@ class PyramidNanoObject(NanoObject):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates."""
 
-        # TODO: Don't ignore rotation elements
+        in_x = np.array(in_x)
+        in_y = np.array(in_y)
+        in_z = np.array(in_z)
+
+        # first rotate
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
 
         R = self.pargs['radius']
-        H = min( self.pargs['height'] , R/tan( radians(self.pargs['pyramid_face_angle']) ) )
-        R_z = R - in_z/tan( radians(self.pargs['pyramid_face_angle']) )
-        if in_z<H and in_z>0 and abs(in_x)<abs(R_z) and abs(in_y)<abs(R_z):
-            return 1.0
-        else:
-            return 0.0
-
-
-    def thresh_near_zero(self, values, threshold=1e-7):
-
-        # Catch values that are exactly zero
-        # test for values being a value or array
-        values = np.array(values)
-        if values.ndim > 0:
-            idx = np.where( values==0.0 )
-            if len(idx[0]) > 0:
-                values[idx] = +threshold
-
-            idx = np.where( abs(values)<threshold )
-            if len(idx[0]) > 0:
-                values[idx] = np.sign(values[idx])*threshold
-        else:
-            # if not array, return rather than modify variable
-            if values ==0.0:
-                values = values + threshold
-            elif np.abs(values) < threshold:
-                values = np.sign(values)*threshold
-            return values
+        H = min( self.pargs['height'] , R/np.tan( np.radians(self.pargs['pyramid_face_angle']) ) )
+        R_z = R - in_z/np.tan( np.radians(self.pargs['pyramid_face_angle']) )
+        V = ((in_z < H)*(in_z > 0)*(np.abs(in_x) < np.abs(R_z))*(np.abs(in_y) < np.abs(R_z))).astype(float)
+        return V
 
 
     def form_factor(self, qx, qy, qz):
         """Returns the complex-amplitude of the form factor at the given
         q-coordinates."""
+        qx = np.array(qx,ndmin=1)
+        qy = np.array(qy,ndmin=1)
+        qz = np.array(qz,ndmin=1)
 
         qx, qy, qz = self.rotate_coord(qx, qy, qz)
 
@@ -3175,21 +3984,18 @@ class PyramidNanoObject(NanoObject):
 
         R = self.pargs['radius']
         H = self.pargs['height']
-        tan_alpha = tan(radians(self.pargs['pyramid_face_angle']))
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
         volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
-
 
 
         # NOTE: (partial kludge) The computation below will hit a divide-by-zero
         # if qx or qy are zero. Because F is smooth near the origin, we will obtain
         # the correct limiting value by using a small, but non-zero, value for qx/qy
-        if qx==0 and qy==0 and qz==0:
-            # F(0,0,0) = rho*V
-            return self.pargs['delta_rho']*volume
-        qx = self.thresh_near_zero(qx)
-        qy = self.thresh_near_zero(qy)
-        qz = self.thresh_near_zero(qz)
+
+        self.thresh_near_zero(qx)
+        self.thresh_near_zero(qy)
+        self.thresh_near_zero(qz)
 
         q1 = 0.5*( (qx-qy)*amod + qz )
         q2 = 0.5*( (qx-qy)*amod - qz )
@@ -3197,22 +4003,27 @@ class PyramidNanoObject(NanoObject):
         q4 = 0.5*( (qx+qy)*amod - qz )
 
 
-        K1 = np.sinc(q1*H/np.pi)*cexp( +1.0j * q1*H ) + np.sinc(q2*H/np.pi)*cexp( -1.0j * q2*H )
-        K2 = -1.0j*np.sinc(q1*H/np.pi)*cexp( +1.0j * q1*H ) + 1.0j*np.sinc(q2*H/np.pi)*cexp( -1.0j * q2*H )
-        K3 = np.sinc(q3*H/np.pi)*cexp( +1.0j * q3*H ) + np.sinc(q4*H/np.pi)*cexp( -1.0j * q4*H )
-        K4 = -1.0j*np.sinc(q3*H/np.pi)*cexp( +1.0j * q3*H ) + 1.0j*np.sinc(q4*H/np.pi)*cexp( -1.0j * q4*H )
+        K1 = np.sinc(q1*H/np.pi)*np.exp( +1.0j * q1*H ) + np.sinc(q2*H/np.pi)*np.exp( -1.0j * q2*H )
+        K2 = -1.0j*np.sinc(q1*H/np.pi)*np.exp( +1.0j * q1*H ) + 1.0j*np.sinc(q2*H/np.pi)*np.exp( -1.0j * q2*H )
+        K3 = np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
+        K4 = -1.0j*np.sinc(q3*H/np.pi)*np.exp( +1.0j * q3*H ) + 1.0j*np.sinc(q4*H/np.pi)*np.exp( -1.0j * q4*H )
 
         F = (H/(qx*qy))*( K1*cos((qx-qy)*R) + K2*sin((qx-qy)*R) - K3*cos((qx+qy)*R) - K4*sin((qx+qy)*R) )
         F *= self.pargs['delta_rho']
 
+        w = np.where((qx<1e-6)*(qy<1e-6)*(qz<1e-6))
+        if len(w[0]) > 0:
+            F[0] = self.pargs['delta_rho']*volume
+
         return F
 
 
+    '''
     def form_factor_array(self, qx, qy, qz):
 
         R = self.pargs['radius']
         H = self.pargs['height']
-        tan_alpha = tan(radians(self.pargs['pyramid_face_angle']))
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
         volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
 
@@ -3222,6 +4033,16 @@ class PyramidNanoObject(NanoObject):
         # NOTE: (partial kludge) The computation below will hit a divide-by-zero
         # if qx or qy are zero. Because F is smooth near the origin, we will obtain
         # the correct limiting value by using a small, but non-zero, value for qx/qy
+
+        w = np.where(np.abs(qx) < 1e-8)
+        if len(w[0]) > 0:
+            qx[w] = 1e-8
+        w = np.where(np.abs(qy) < 1e-8)
+        if len(w[0]) > 0:
+            qy[w] = 1e-8
+        w = np.where(np.abs(qz) < 1e-8)
+        if len(w[0]) > 0:
+            qz[w] = 1e-8
 
         self.thresh_near_zero_array(qx)
         self.thresh_near_zero_array(qy)
@@ -3240,9 +4061,12 @@ class PyramidNanoObject(NanoObject):
 
         F = (H/(qx*qy))*( K1*np.cos((qx-qy)*R) + K2*np.sin((qx-qy)*R) - K3*np.cos((qx+qy)*R) - K4*np.sin((qx+qy)*R) )
         F *= self.pargs['delta_rho']
+        if np.any(np.isnan(F)):
+            raise ValueError
 
 
         return F
+    '''
 
 
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
@@ -3253,7 +4077,7 @@ class PyramidNanoObject(NanoObject):
 
         R = self.pargs['radius']
         H = self.pargs['height']
-        tan_alpha = tan(radians(self.pargs['pyramid_face_angle']))
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
         volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
 
@@ -3280,6 +4104,7 @@ class PyramidNanoObject(NanoObject):
         return P
 
 
+    '''
     def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
         """Returns the intensity of the form factor, under the assumption
         of random orientation of the polyhedron. In other words, we
@@ -3288,7 +4113,7 @@ class PyramidNanoObject(NanoObject):
 
         R = self.pargs['radius']
         H = self.pargs['height']
-        tan_alpha = tan(radians(self.pargs['pyramid_face_angle']))
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
         volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
 
@@ -3327,7 +4152,184 @@ class PyramidNanoObject(NanoObject):
 
 
         return P
+    '''
 
+
+# HollowPyramidNanoObject
+###################################################################
+class HollowOctahedronNanoObject(NanoObject):
+    """ Hollow octahdedron
+
+        params:
+            inner_radius:
+            outer_radius:
+
+
+    """
+
+    def __init__(self, pargs={}, seed=None):
+
+        #self.rotation_matrix = np.identity(3)
+
+        self.pargs = {   'rho_ambient': 0.0, \
+                            'rho1': 15.0, \
+                            'height': None, \
+                            'pyramid_face_angle': None, \
+        }
+
+        self.pargs.update(pargs)
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
+
+
+        # Set defaults
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.0
+        if 'eta' not in self.pargs:
+            self.pargs['eta'] = 0.0
+        if 'phi' not in self.pargs:
+            self.pargs['phi'] = 0.0
+        if 'theta' not in self.pargs:
+            self.pargs['theta'] = 0.0
+
+        self.rotation_matrix = self.rotation_elements( self.pargs['eta'], self.pargs['phi'], self.pargs['theta'] )
+
+        pargs_inner = pargs.copy()
+        pargs_inner['radius'] = pargs['inner_radius']
+        pargs_inner['height'] = None
+        pargs_inner['pyramid_face_angle'] = None
+        self.inner_octa = OctahedronNanoObject(pargs_inner)
+
+        pargs_outer = pargs.copy()
+        pargs_outer['radius'] = pargs['outer_radius']
+        pargs_outer['height'] = None
+        pargs_outer['pyramid_face_angle'] = None
+        self.outer_octa= OctahedronNanoObject(pargs_outer)
+
+        #if 'cache_results' not in self.pargs:
+            #self.pargs['cache_results' ] = True
+        #self.form_factor_isotropic_already_computed = {}
+
+
+
+    def V(self, in_x, in_y, in_z, rotation_elements=None):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates."""
+
+        in_x = np.array(in_x)
+        in_y = np.array(in_y)
+        in_z = np.array(in_z)
+
+        # first rotate
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
+
+        V_inner = self.inner_octa.V(in_x, in_y, in_z)
+        V_outer = self.outer_octa.V(in_x, in_y, in_z)
+
+        return V_outer - V_inner
+
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates."""
+
+        qx, qy, qz = self.rotate_coord(qx, qy, qz)
+        F_inner = self.inner_octa.form_factor(qx, qy, qz)
+        F_outer = self.outer_octa.form_factor(qx, qy, qz)
+
+        return F_outer - F_inner
+
+    '''
+    def form_factor_array(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates."""
+
+        qx, qy, qz = self.rotate_coord(qx, qy, qz)
+        F_inner = self.inner_octa.form_factor(qx, qy, qz)
+        F_outer = self.outer_octa.form_factor(qx, qy, qz)
+
+        return F_outer - F_inner
+    '''
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+        R = self.pargs['radius']
+        H = self.pargs['height']
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
+        amod = 1.0/tan_alpha
+        volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
+
+        # Note that we only integrate one of the 4 quadrants, since they are all identical
+        # (we later multiply by 4 to compensate)
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+
+        P = 0.0
+
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            for phi in phi_vals:
+                qx = -q*sin(theta)*cos(phi)
+                qy =  q*sin(theta)*sin(phi)
+
+                F = self.form_factor( qx, qy, qz )
+
+                P += 4 * F*F.conjugate() * dS
+
+        return P
+
+
+    '''
+    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+
+        # Note that we only integrate one of the 4 quadrants, since they are all identical
+        # (we later multiply by 4 to compensate)
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
+
+
+        P = np.zeros( len(q_list) )
+
+        for theta in theta_vals:
+            # When theta==0, there is nothing to contribute to integral
+            # (sin(theta)=0, so the whole integrand is zero).
+            if theta!=0:
+
+                qz =  q_list*cos(theta)
+                theta_part = dtheta*dphi*sin(theta)
+
+                # Start computing partial values
+                qy_partial =  q_list*sin(theta)
+                for phi in phi_vals:
+
+                    qx = -qy_partial*cos(phi)
+                    qy = qy_partial*sin(phi)
+
+                    F = self.form_factor_array( qx, qy, qz )
+
+                    # Factor of 8 accounts for the fact that we only integrate
+                    # one of the eight octants
+                    P += 4 * F*F.conjugate() * theta_part
+
+
+        #if q_list[0]==0:
+            #P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
+
+
+        return P
+    '''
 
 
 
@@ -3344,8 +4346,10 @@ class OctahedronNanoObject(PyramidNanoObject):
     def V(self, in_x, in_y, in_z, rotation_elements=None):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates."""
+        Vu = super(OctahedronNanoObject, self).V(*self.map_rcoord(np.array([in_x, in_y, in_z])))
+        Vd = super(OctahedronNanoObject, self).V(*self.map_rcoord(np.array([in_x, in_y, -in_z])))
 
-        # TODO: This makes assumptions about there being no rotation
+        return Vu+Vd
 
         return super(OctahedronNanoObject, self).V( in_x, in_y, abs(in_z), rotation_elements=rotation_elements )
 
@@ -3406,7 +4410,7 @@ class OctahedronNanoObject(PyramidNanoObject):
 
         R = self.pargs['radius']
         H = self.pargs['height']
-        tan_alpha = tan(radians(self.pargs['pyramid_face_angle']))
+        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
         volume = 2*(4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
 
@@ -3435,8 +4439,10 @@ class OctahedronNanoObject(PyramidNanoObject):
                     Fu = super(OctahedronNanoObject, self).form_factor_array( qx, qy, qz )
                     Fd = super(OctahedronNanoObject, self).form_factor_array( qx, qy, -qz )
                     F = Fu + Fd
+                    if np.any(np.isnan(F)):
+                        raise ValueError
 
-                    P += 4 * F*F.conjugate() * theta_part
+                    P += 4 * (F*F.conjugate()).real * theta_part
 
 
         if q_list[0]==0:
@@ -3585,6 +4591,14 @@ class CylinderNanoObject(NanoObject):
         """
         # IMPORTANT : phase must be retrieved *before* mapping in q
         # next a translation is a phase shift
+        qx = np.array(qx)
+        qy = np.array(qy)
+        qz = np.array(qz)
+        if qx.ndim==0:
+            qx = np.array([qx])
+            qy = np.array([qy])
+            qz = np.array([qz])
+
         phase = self.get_phase(qx,qy,qz)
 
         # first rotate just as for V
@@ -3615,6 +4629,489 @@ class CylinderNanoObject(NanoObject):
         F = 2*j0(qz*H)*j1(qr*R)/qr/R + 1j*0
         F *= phase
         F *= self.pargs['delta_rho']*volume
+
+        return F
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption of
+        random orientation of the cylinder. In other words, we average over
+        every possible orientation. This value is denoted by P(q)
+        P(q=0) = 4*pi*volume^2*(delta rho)^2
+            Note there is a 4pi factor extra compared to the non isotropic version
+        """
+        q = np.array(q)
+        if q.ndim == 0:
+            q = np.array([q])
+
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+
+        P = 0.0
+
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            for phi in phi_vals:
+                qx = -q*sin(theta)*cos(phi)
+                qy =  q*sin(theta)*sin(phi)
+
+                F = self.form_factor( qx, qy, qz )
+
+                P += np.abs(F)**2 * dS
+
+        return P
+
+
+# EllipsoidNanoObject
+###################################################################
+class EllipsoidNanoObject(NanoObject):
+    """A an oblate spheroid nano-object.
+    Follows:
+        x^2/a^2 + y^2/b^2 + z^2/c^2 = 1
+        for the canonical (unrotated version)
+
+    If (a = b) < c then it's an oblate spheroid,
+    If (a = b) > c then it's a prolate spheroid
+    If a = b = c, then it's a sphere.
+
+    self.pargs contains parameters:
+        rho_ambient : the cylinder density
+        rho1 : the solvent density (I think, JL sept 2016)
+        a : (default 1.0) the spheroid radius along the minor axes
+        b : (default 1.0) the cylinder length
+        c : (default 1.0) the cylinder length
+
+        eta,phi,eta: Euler angles
+        x0, y0, z0 : the position of cylinder COM relative to origin
+        The object is rotated first about origin, then translated to
+            where x0, y0, and z0 define it to be.
+
+    these are calculated after the fact:
+        delta_rho : rho_ambient - rho1
+    """
+
+    def __init__(self, pargs={}, seed=None):
+        #self.rotation_matrix = np.identity(3)
+        self.pargs = {   'rho_ambient': 0.0, \
+                            'rho1': 15.0, \
+                            'radius': None, \
+                            'height': None, \
+                    }
+
+        self.pargs.update(pargs)
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
+
+        #if self.pargs['radius']==None or self.pargs['height']==None:
+            # user did not specify radius or height should be an error
+            #print("Error, did not specify radius or height, setting defaults")
+
+
+        # Set defaults
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.0
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.0
+        if 'eta' not in self.pargs:
+            self.pargs['eta'] = 0.0
+        if 'phi' not in self.pargs:
+            self.pargs['phi'] = 0.0
+        if 'theta' not in self.pargs:
+            self.pargs['theta'] = 0.0
+        if 'x0' not in self.pargs:
+            x0 = 0.
+            self.pargs['x0'] = x0
+        if 'y0' not in self.pargs:
+            y0 = 0.
+            self.pargs['y0'] = y0
+        if 'z0' not in self.pargs:
+            z0 = 0.
+            self.pargs['z0'] = z0
+
+        self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
+        self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
+
+        #if 'cache_results' not in self.pargs:
+            #self.pargs['cache_results' ] = True
+        #self.form_factor_isotropic_already_computed = {}
+
+
+    def V(self, in_x, in_y, in_z):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates.
+        Returns 1 if in the space, 0 otherwise.
+        Can be arrays.
+        Rotate then translate.
+
+            rotation_matrix is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
+        """
+
+        in_x = np.array(in_x)
+        in_y = np.array(in_y)
+        in_z = np.array(in_z)
+
+
+        a = self.pargs['a']
+        b = self.pargs['b']
+        c = self.pargs['c']
+
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
+
+        in_x /= a
+        in_y /= b
+        in_z /= c
+
+        # it's an array
+        result = np.zeros(in_x.shape)
+        w = np.where(in_x**2 + in_y**2 + in_z**2 <= 1)
+        if len(w[0]) > 0:
+            result[w] = 1
+
+        return result
+
+
+    def thresh_near_zero(self, values, threshold=1e-7):
+        # Catch values that are exactly zero
+        # test for values being a value or array
+        if values.ndim > 0:
+            idx = np.where( values==0.0 )
+            if len(idx[0]) > 0:
+                values[idx] = +threshold
+
+            idx = np.where( abs(values)<threshold )
+            if len(idx[0]) > 0:
+                values[idx] = np.sign(values[idx])*threshold
+        else:
+            # if not array, return rather than modify variable
+            if values ==0.0:
+                values = values + threshold
+            elif np.abs(values) < threshold:
+                values = np.sign(values)*threshold
+            return values
+
+
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates.
+            The first set of q are assumed to be that of the root qx,qy,qz
+            The next sets are the parent coordinates. These are only supplied if the parent is not the root
+            The root q is only necessary for the form factor, where the phase factor needs to be calculated
+                with respect to the origin of that coordinate system.
+        """
+        # IMPORTANT : phase must be retrieved *before* mapping in q
+        # next a translation is a phase shift
+        phase = self.get_phase(qx,qy,qz)
+
+        # first rotate just as for V
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
+
+
+        #F = self.form_factor_numerical(qx, qy, qz, num_points=100, size_scale=None, rotation_elements=None)
+
+        a = self.pargs['a']
+        b = self.pargs['b']
+        c = self.pargs['c']
+
+        qy *= b/a
+        qz *= c/a
+        R = a
+
+
+        # NOTE: (partial kludge) The computation below will hit a divide-by-zero
+        # if qx or qy are zero. Because F is smooth near the origin, we will obtain
+        # the correct limiting value by using a small, but non-zero, value for qx/qy
+        #if qx==0 and qy==0 and qz==0:
+            # F(0,0,0) = rho*V
+            #return self.pargs['delta_rho']*volume
+
+        # works on arrays, no need to return result
+        self.thresh_near_zero(qx)
+        self.thresh_near_zero(qy)
+        self.thresh_near_zero(qz)
+
+        volume = 4/3.*np.pi*a*b*c
+
+        qR = R*np.sqrt( qx**2 + qy**2 + qz**2 )
+
+        #for i, qxi in enumerate(qx):
+            #F[i] = self.form_factor(qx[i], qy[i], qz[i])
+
+        F = 3.0*self.pargs['delta_rho']*volume*( np.sin(qR) - qR*np.cos(qR) )/( qR**3 )
+
+        return F
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption of
+        random orientation of the cylinder. In other words, we average over
+        every possible orientation. This value is denoted by P(q)"""
+
+        a = self.pargs['a']
+        b = self.pargs['b']
+        c = self.pargs['c']
+
+        volume = 4/3.*np.pi*a*b*c
+
+        '''
+        to sample orientations properly, we need to use random variables u,v
+            uniform in the range (0,1) and set theta and phi to be:
+            theta = 2*np.pi*u
+            phi = np.arccos(2*nu-1)
+
+            I will change: theta = 2*np.pi*(u-.5)
+            for a restricted set, set theta to restricted range
+            and nu should be chosen such that cos(phimax) = 2*nu-1
+            nu = .5*(cos(phimax) + 1)
+
+            We don't need this here since this code takes dS into account
+                but could be useful in the future
+        '''
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+
+        P = 0.0
+
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            for phi in phi_vals:
+                qx = -q*sin(theta)*cos(phi)
+                qy =  q*sin(theta)*sin(phi)
+
+                F = self.form_factor( qx, qy, qz )
+
+                P += F*F.conjugate() * dS
+
+        return P
+
+
+    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+        R = self.pargs['radius']
+        H = self.pargs['height']
+        volume = np.pi*R**2*H
+
+        # Note that we only integrate one of the 4 quadrants, since they are all identical
+        # (we later multiply by 4 to compensate)
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
+
+
+        P = np.zeros( len(q_list) )
+
+        for theta in theta_vals:
+            # When theta==0, there is nothing to contribute to integral
+            # (sin(theta)=0, so the whole integrand is zero).
+            if theta!=0:
+
+                qz =  q_list*cos(theta)
+                theta_part = dtheta*dphi*sin(theta)
+
+                # Start computing partial values
+                qy_partial =  q_list*sin(theta)
+                for phi in phi_vals:
+
+                    qx = -qy_partial*cos(phi)
+                    qy = qy_partial*sin(phi)
+
+                    F = self.form_factor_array( qx, qy, qz )
+
+                    # Factor of 8 accounts for the fact that we only integrate
+                    # one of the eight octants
+                    P += 4 * F*F.conjugate() * theta_part
+
+
+        if q_list[0]==0:
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
+
+
+        return P
+
+
+# CylindicalShellsNanoObject
+###################################################################
+class CylindricalShellsNanoObject(NanoObject):
+    """cylindrical shells. The canonical (unrotated) version
+    has the circular-base in the x-y plane, with the length along z.
+
+    self.pargs contains parameters:
+        rho_ambient : the cylinder density
+        rho1 : the solvent density (I think, JL sept 2016)
+        inner_radius : (default 1.0) the cylinder inner radius
+        outer_radius : (default 1.0) the cylinder outer radius
+        length : (default 1.0) the cylinder length
+
+        eta,phi,eta: Euler angles
+        x0, y0, z0 : the position of cylinder COM relative to origin
+        The object is rotated first about origin, then translated to
+            where x0, y0, and z0 define it to be.
+
+    these are calculated after the fact:
+        delta_rho : rho_ambient - rho1
+    """
+
+    def __init__(self, pargs={}, seed=None):
+        #self.rotation_matrix = np.identity(3)
+        self.pargs = {   'rho_ambient': 0.0, \
+                            'rho1': 15.0, \
+                            'radius': None, \
+                            'height': None, \
+                    }
+
+        self.pargs.update(pargs)
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
+
+        #if self.pargs['radius']==None or self.pargs['height']==None:
+            # user did not specify radius or height should be an error
+            #print("Error, did not specify radius or height, setting defaults")
+
+
+        # Set defaults
+        if 'outer_radius' not in self.pargs:
+            self.pargs['outer_radius'] = 1.0
+        if 'inner_radius' not in self.pargs:
+            self.pargs['inner_radius'] = 0.0
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.0
+        if 'eta' not in self.pargs:
+            self.pargs['eta'] = 0.0
+        if 'phi' not in self.pargs:
+            self.pargs['phi'] = 0.0
+        if 'theta' not in self.pargs:
+            self.pargs['theta'] = 0.0
+        if 'x0' not in self.pargs:
+            x0 = 0.
+            self.pargs['x0'] = x0
+        if 'y0' not in self.pargs:
+            y0 = 0.
+            self.pargs['y0'] = y0
+        if 'z0' not in self.pargs:
+            z0 = 0.
+            self.pargs['z0'] = z0
+
+        self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
+        self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
+
+        #if 'cache_results' not in self.pargs:
+            #self.pargs['cache_results' ] = True
+        #self.form_factor_isotropic_already_computed = {}
+
+
+    def V(self, in_x, in_y, in_z):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates.
+        Returns 1 if in the space, 0 otherwise.
+        Can be arrays.
+        Rotate then translate.
+
+            rotation_matrix is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
+        """
+
+        in_x = np.array(in_x)
+        in_y = np.array(in_y)
+        in_z = np.array(in_z)
+
+
+        Rin = self.pargs['inner_radius']
+        Rout = self.pargs['outer_radius']
+        L = self.pargs['height']
+
+        in_x, in_y, in_z = self.map_rcoord(np.array([in_x, in_y, in_z]))
+
+        r = np.hypot(in_x, in_y)
+
+        # it's an array
+        result = np.zeros(in_x.shape)
+        w = np.where((in_z <= L/2.)*(in_z >= -L/2.)*(np.abs(r) <= Rout)*(np.abs(r) >= Rin))
+        if len(w[0]) > 0:
+            result[w] = 1
+
+        return result
+
+
+    def thresh_near_zero(self, values, threshold=1e-7):
+        # Catch values that are exactly zero
+        # test for values being a value or array
+        if values.ndim > 0:
+            idx = np.where( values==0.0 )
+            if len(idx[0]) > 0:
+                values[idx] = +threshold
+
+            idx = np.where( abs(values)<threshold )
+            if len(idx[0]) > 0:
+                values[idx] = np.sign(values[idx])*threshold
+        else:
+            # if not array, return rather than modify variable
+            if values ==0.0:
+                values = values + threshold
+            elif np.abs(values) < threshold:
+                values = np.sign(values)*threshold
+            return values
+
+
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates.
+            The first set of q are assumed to be that of the root qx,qy,qz
+            The next sets are the parent coordinates. These are only supplied if the parent is not the root
+            The root q is only necessary for the form factor, where the phase factor needs to be calculated
+                with respect to the origin of that coordinate system.
+        """
+        # IMPORTANT : phase must be retrieved *before* mapping in q
+        # next a translation is a phase shift
+        phase = self.get_phase(qx,qy,qz)
+
+        # first rotate just as for V
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
+
+
+        #F = self.form_factor_numerical(qx, qy, qz, num_points=100, size_scale=None, rotation_elements=None)
+
+        Rin = self.pargs['inner_radius']
+        Rout = self.pargs['outer_radius']
+        H = self.pargs['height']
+        volume = np.pi*(Rout**2-Rin**2)*H
+
+
+        # NOTE: (partial kludge) The computation below will hit a divide-by-zero
+        # if qx or qy are zero. Because F is smooth near the origin, we will obtain
+        # the correct limiting value by using a small, but non-zero, value for qx/qy
+        #if qx==0 and qy==0 and qz==0:
+            # F(0,0,0) = rho*V
+            #return self.pargs['delta_rho']*volume
+
+        # works on arrays, no need to return result
+        self.thresh_near_zero_array(qx)
+        self.thresh_near_zero_array(qy)
+        self.thresh_near_zero_array(qz)
+
+        qr = np.hypot(qx, qy)
+
+        Fz = 2*j0(qz*H)
+        if Rin > Rout:
+            raise ValueError("Rin is greater than Rout")
+        #Fin = j1(qr*Rin)/qr/Rin + 1j*0
+        #Fout = j1(qr*Rout)/qr/Rout + 1j*0
+        if Rin == 0:
+            F = j1(qr*Rout)/qr/Rout + 1j*0
+        else:
+            # need to multiply volume as well (area here)
+            F = (j1(qr*Rout)*Rin*np.pi*Rout**2 - j1(qr*Rin)*Rout*np.pi*Rin**2)/qr/Rin/Rout + 1j*0
+        F *= Fz
+        F *= phase
+        F *= self.pargs['delta_rho']*H
 
         return F
 
@@ -3709,6 +5206,7 @@ class CylinderNanoObject(NanoObject):
 
         return P
 
+
 # SixCylinderNanoObject
 ###################################################################
 class SixCylinderNanoObject(NanoObject):
@@ -3731,7 +5229,12 @@ class SixCylinderNanoObject(NanoObject):
         delta_rho : rho_ambient - rho1
     """
 
-    def __init__(self, pargs={}, seed=None):
+    def __init__(self, baseObject=None, pargs={}, seed=None):
+        ''' baseObject : the base object
+
+        '''
+        if baseObject is None:
+            baseObject = CylinderNanoObject
 
         #self.rotation_matrix = np.identity(3)
 
@@ -3745,10 +5248,10 @@ class SixCylinderNanoObject(NanoObject):
         self.pargs.update(pargs)
         self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
 
-        if self.pargs['radius']==None or self.pargs['height']==None or \
-           self.pargs['packradius'] == None:
-            # user did not specify radius or height should be an error
-            print("Error, did not specify radius or height, setting defaults")
+        #if self.pargs['radius']==None or self.pargs['height']==None or \
+           #self.pargs['packradius'] == None:
+            ## user did not specify radius or height should be an error
+            #print("Error, did not specify radius or height, setting defaults")
 
         # Set defaults
         if 'radius' not in self.pargs:
@@ -3776,7 +5279,7 @@ class SixCylinderNanoObject(NanoObject):
         self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
         self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
 
-        radius = pargs['radius']
+        #radius = pargs['radius']
         packradius = pargs['packradius']
 
         poslist = list()
@@ -3789,7 +5292,257 @@ class SixCylinderNanoObject(NanoObject):
         for pos  in poslist:
             eta, phi, theta, x0, y0, z0 = pos
 
-            cyl = CylinderNanoObject(pargs=pargs)
+            cyl = baseObject(pargs=pargs)
+            cyl.set_angles(eta=eta, phi=phi, theta=theta)
+            cyl.set_origin(x0=x0, y0=y0, z0=z0)
+            self.cylinderobjects.append(cyl)
+
+        #if 'cache_results' not in self.pargs:
+            #self.pargs['cache_results' ] = True
+        #self.form_factor_isotropic_already_computed = {}
+
+
+    def V(self, in_x, in_y, in_z):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates.
+        Returns 1 if in the space, 0 otherwise.
+        Can be arrays.
+        Rotate then translate.
+
+            rotation_matrix is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
+        """
+        # TODO: This makes assumptions about there being no rotation
+        # need to add extra rotation of octahedron
+        V = 0.
+        for cyl in self.cylinderobjects:
+            V = V + cyl.V(*self.map_rcoord(np.array([in_x, in_y, in_z])))
+
+        return V
+
+
+    def thresh_near_zero(self, values, threshold=1e-7):
+        # Catch values that are exactly zero
+        # test for values being a value or array
+        values = np.array(values)
+        if values.ndim > 0:
+            idx = np.where( values==0.0 )
+            if len(idx[0]) > 0:
+                values[idx] = +threshold
+
+            idx = np.where( abs(values)<threshold )
+            if len(idx[0]) > 0:
+                values[idx] = np.sign(values[idx])*threshold
+        else:
+            # if not array, return rather than modify variable
+            if values ==0.0:
+                values = values + threshold
+            elif np.abs(values) < threshold:
+                values = np.sign(values)*threshold
+            return values
+
+    def get_phase(self, qx, qy, qz):
+        ''' Get the phase factor from the shift'''
+        phase = np.exp(1j*qx*self.pargs['x0'])
+        phase *= np.exp(1j*qy*self.pargs['y0'])
+        phase *= np.exp(1j*qz*self.pargs['z0'])
+
+        return phase
+
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates."""
+        # mapping is with respect to the parent coordinates
+        phase = self.get_phase(qx,qy,qz)
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
+        # next a translation is a phase shift
+
+        F = 0 + 1j*0
+        for cyl in self.cylinderobjects:
+            F = F + cyl.form_factor(qx, qy, qz)
+
+        F *= phase
+
+        return F
+
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption of
+        random orientation of the cylinder. In other words, we average over
+        every possible orientation. This value is denoted by P(q)"""
+
+        R = self.pargs['radius']
+        H = self.pargs['height']
+        volume = np.pi*R**2*H
+
+        '''
+        to sample orientations properly, we need to use random variables u,v
+            uniform in the range (0,1) and set theta and phi to be:
+            theta = 2*np.pi*u
+            phi = np.arccos(2*nu-1)
+
+            I will change: theta = 2*np.pi*(u-.5)
+            for a restricted set, set theta to restricted range
+            and nu should be chosen such that cos(phimax) = 2*nu-1
+            nu = .5*(cos(phimax) + 1)
+
+            We don't need this here since this code takes dS into account
+                but could be useful in the future
+        '''
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+
+        P = 0.0
+
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            for phi in phi_vals:
+                qx = -q*sin(theta)*cos(phi)
+                qy =  q*sin(theta)*sin(phi)
+
+                F = self.form_factor( qx, qy, qz )
+
+                P += F*F.conjugate() * dS
+
+        return P
+
+
+    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+        R = self.pargs['radius']
+        H = self.pargs['height']
+        volume = np.pi*R**2*H
+
+        # Note that we only integrate one of the 4 quadrants, since they are all identical
+        # (we later multiply by 4 to compensate)
+        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True ) # In-plane integral
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True ) # Integral from +z-axis to -z-axis
+
+
+        P = np.zeros( len(q_list) )
+
+        for theta in theta_vals:
+            # When theta==0, there is nothing to contribute to integral
+            # (sin(theta)=0, so the whole integrand is zero).
+            if theta!=0:
+
+                qz =  q_list*cos(theta)
+                theta_part = dtheta*dphi*sin(theta)
+
+                # Start computing partial values
+                qy_partial =  q_list*sin(theta)
+                for phi in phi_vals:
+
+                    qx = -qy_partial*cos(phi)
+                    qy = qy_partial*sin(phi)
+
+                    F = self.form_factor_array( qx, qy, qz )
+
+                    # Factor of 8 accounts for the fact that we only integrate
+                    # one of the eight octants
+                    P += 4 * F*F.conjugate() * theta_part
+
+
+        if q_list[0]==0:
+            P[0] = ( (self.pargs['delta_rho']*volume)**2 )*4*np.pi
+
+
+        return P
+
+
+# SixCylindricalShellsNanoObject
+###################################################################
+class SixCylindricalShellsNanoObject(NanoObject):
+    """A six cylinder nano-object. The canonical (unrotated) version
+    has the circular-base in the x-y plane, with the length along z.
+
+    self.pargs contains parameters:
+        rho_ambient : the cylinder density
+        rho1 : the solvent density (I think, JL sept 2016)
+        radius : (default 1.0) the cylinder radius, there are 6 of these
+            packed.
+        length : (default 1.0) the cylinder length
+
+        eta,phi,eta: Euler angles
+        x0, y0, z0 : the position of cylinder COM relative to origin
+        The object is rotated first about origin, then translated to
+            where x0, y0, and z0 define it to be.
+
+    these are calculated after the fact:
+        delta_rho : rho_ambient - rho1
+    """
+
+    def __init__(self, pargs={}, seed=None):
+        ''' baseObject : the base object
+
+        '''
+
+        #self.rotation_matrix = np.identity(3)
+
+        self.pargs = {   'rho_ambient': 0.0, \
+                            'rho1': 15.0, \
+                            'radius': None, \
+                            'height': None, \
+                            'packradius': None, \
+                    }
+
+        self.pargs.update(pargs)
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
+
+        #if self.pargs['radius']==None or self.pargs['height']==None or \
+           #self.pargs['packradius'] == None:
+            ## user did not specify radius or height should be an error
+            #print("Error, did not specify radius or height, setting defaults")
+
+        # Set defaults
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.0
+        if 'packradius' not in self.pargs:
+            self.pargs['packradius'] = 2*1.0/(2*np.pi/6.)
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.0
+        if 'eta' not in self.pargs:
+            self.pargs['eta'] = 0.0
+        if 'phi' not in self.pargs:
+            self.pargs['phi'] = 0.0
+        if 'theta' not in self.pargs:
+            self.pargs['theta'] = 0.0
+        if 'x0' not in self.pargs:
+            x0 = 0.
+            self.pargs['x0'] = x0
+        if 'y0' not in self.pargs:
+            y0 = 0.
+            self.pargs['y0'] = y0
+        if 'z0' not in self.pargs:
+            z0 = 0.
+            self.pargs['z0'] = z0
+
+        self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
+        self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
+
+        #radius = pargs['radius']
+        packradius = pargs['packradius']
+
+        poslist = list()
+        dphi = 2*np.pi/6.
+        for i in range(6):
+            poslist.append([0, 0, 0, packradius*np.cos(i*dphi), packradius*np.sin(i*dphi), 0])
+        poslist = np.array(poslist)
+
+        self.cylinderobjects = list()
+        for pos  in poslist:
+            eta, phi, theta, x0, y0, z0 = pos
+
+            cyl = CylindricalShellsNanoObject(pargs=pargs)
             cyl.set_angles(eta=eta, phi=phi, theta=theta)
             cyl.set_origin(x0=x0, y0=y0, z0=z0)
             self.cylinderobjects.append(cyl)
@@ -3974,8 +5727,12 @@ class OctahedronCylindersNanoObject(NanoObject):
             notes about rotations:
                 - i need to dot the rotation matrix of the ocahedron with each individula
                         cylinder's rotationo element
+            edgelength : length of edge
+            edgespread : how much to expand the rods by (not a good name)
+                positive is expansion, negative is compression
+            edgesep : separation of element from edge
     """
-    def __init__(self, pargs={}, seed=None):
+    def __init__(self, baseObject=None, pargs={}, seed=None):
 
         #self.rotation_matrix = np.identity(3)
 
@@ -3984,23 +5741,31 @@ class OctahedronCylindersNanoObject(NanoObject):
                             'radius': None, \
                             'height': None, \
                             'edgelength': None, \
+                            'edgesep': None, \
                     }
+
+        if baseObject is None:
+            baseObject = CylinderNanoObject
 
         self.pargs.update(pargs)
         self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
 
-        if self.pargs['radius']==None or self.pargs['height']==None:
+        #if self.pargs['radius']==None or self.pargs['height']==None:
             # user did not specify radius or height should be an error
-            print("Error, did not specify radius or height, setting defaults")
+            #print("Error, did not specify radius or height, setting defaults")
 
 
         # Set defaults
         if 'radius' not in self.pargs:
             self.pargs['radius'] = 1.0
+        if 'edgeshift' not in self.pargs:
+            self.pargs['edgeshift'] = 1.0
         if 'height' not in self.pargs:
             self.pargs['height'] = 1.0
         if 'edgelength' not in self.pargs:
             self.pargs['edgelength'] = 1.0
+        if 'edgespread' not in self.pargs:
+            self.pargs['edgespread'] = 0.0
         if 'eta' not in self.pargs:
             self.pargs['eta'] = 0.0
         if 'phi' not in self.pargs:
@@ -4018,10 +5783,45 @@ class OctahedronCylindersNanoObject(NanoObject):
         if 'z0' not in self.pargs:
             self.pargs['z0'] = 0.0
 
+        # these are slight shifts per cyl along the axis
+        # positive is away from COM and negative towards
+        shiftlabels = [
+            # these correspond to the poslist
+            'CYZ1', 'CXZ1', 'CYZ2', 'CXZ2',
+            'CXY1', 'CXY4', 'CXY3', 'CXY2',
+            'CYZ3', 'CXZ3', 'CYZ4', 'CXZ4',
+        ]
+
+        # you flip x or y from original shifts to move along edge axis
+        # not a good explanation but some sort of personal bookkeeping for now...
+        shiftfacs = np.array([
+            # top 
+            [0,-1,1],
+            [-1,0,1],
+            [0,1,1],
+            [1, 0,1],
+            # middle
+            [-1,1,0],
+            [-1,-1,0],
+            [1,-1,0],
+            [1,1,0],
+            # bottom
+            [0,1,-1],
+            [1, 0, -1],
+            [0,-1, -1],
+            [-1,0,-1]
+        ])
+
+        for lbl1 in shiftlabels:
+            if lbl1 not in self.pargs:
+                self.pargs[lbl1] = 0.
+
+
         self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
         self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
 
-        fac1 = np.sqrt(2)/2.*(.5*self.pargs['edgelength'] + 2*self.pargs['radius'])
+        fac1 = np.sqrt(2)/2.*((.5*self.pargs['edgelength']) + self.pargs['edgespread'])
+
 
         poslist = np.array([
         # top part
@@ -4041,12 +5841,16 @@ class OctahedronCylindersNanoObject(NanoObject):
         [0, -45, 0, fac1, 0, -fac1],
         ])
 
+        # now add the shift factors
+        for i in range(len(poslist)):
+            poslist[i, 3:] += np.sqrt(2)/2.*shiftfacs[i]*self.pargs[shiftlabels[i]]
+
 
         self.cylinderobjects = list()
         for pos  in poslist:
             eta, phi, theta, x0, y0, z0 = pos
 
-            cyl = CylinderNanoObject(pargs=pargs)
+            cyl = baseObject(pargs=pargs)
             cyl.set_angles(eta=eta, phi=phi, theta=theta)
             cyl.set_origin(x0=x0, y0=y0, z0=z0)
             self.cylinderobjects.append(cyl)
@@ -4099,68 +5903,6 @@ class OctahedronCylindersNanoObject(NanoObject):
         return F
 
 
-    def _form_factor(self, qxroot, qyroot, qzroot, qxparent=None, qyparent=None,
-                    qzparent=None):
-        """Returns the intensity of the form factor, under the assumption
-        of random orientation of the polyhedron. In other words, we
-        average over every possible orientation. This value is denoted
-        by P(q)
-            The orientational spread is treated as an independent tilt in each
-            axis. In other words, we tilt in x, bring back to zero, tilt in y,
-            and so on
-            If delta_theta is None or less than 1e-6, no orientational spread is attempted.
-        """
-        if qxparent is None:
-            qxparent, qyparent, qzparent = qxroot, qyroot, qzroot
-        elif qyparent is None or qzparent is None:
-            raise ValueError("Error supplied x but not y or z")
-
-        delta_theta = self.pargs['delta_theta']
-        num_theta = self.pargs['num_theta']
-
-
-        if delta_theta is None:
-            delta_theta = 0.
-
-        if np.abs(delta_theta) > 1e-6:
-            # do an orientational average
-            theta_vals, dtheta = np.linspace(-delta_theta/2., delta_theta/2.,
-                                             num_theta, endpoint=False,
-                                             retstep=True)
-
-            F = 0.0 + 1j
-            dStot = 0.
-            numth = self.pargs['num_theta']
-            for i, theta in enumerate(theta_vals):
-                print("orientational avg, {} of {}".format(i, numth))
-                # tilt in z is just eta = dtheta
-                rotz = self.rotation_elements(theta, 0., 0.)
-                qx, qy, qz = self.map_coord(np.array([qxparent,qyparent,qzparent]),rotz)
-                F += self._form_factor(qxroot, qyroot, qzroot, qx, qy, qz)
-                dStot += dtheta
-
-                # tilt in y is just theta = dtheta
-                roty = self.rotation_elements(0, theta, 0.)
-                qx, qy, qz = self.map_coord(np.array([qxparent,qyparent,qzparent]),roty)
-                F += self._form_factor(qxroot, qyroot, qzroot, qx, qy, qz)
-                dStot += dtheta
-
-                # tilt in z is just eta = 90, theta = dtheta
-                rotx = self.rotation_elements(np.pi/2., theta, 0.)
-                qx, qy, qz = self.map_coord(np.array([qxparent,qyparent,qzparent]),rotx)
-                F += self._form_factor(qxroot, qyroot, qzroot, qx, qy, qz)
-                dStot += dtheta
-
-
-            F /= dStot
-
-        else:
-            F = self._form_factor(qxroot, qyroot, qzroot, qxparent, qyparent,
-                                  qzparent)
-
-        return F
-
-
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the intensity of the form factor, under the assumption
         of random orientation of the polyhedron. In other words, we
@@ -4168,12 +5910,10 @@ class OctahedronCylindersNanoObject(NanoObject):
         by P(q)"""
 
 
-        phi_vals, dphi = np.linspace( 0, np.pi/2, num_phi, endpoint=False, retstep=True )
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
         theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
 
         P = 0.0
-        dthtmp = self.pargs['delta_theta']
-        self.pargs['delta_theta'] = 0
         for theta in theta_vals:
             qz =  q*cos(theta)
             dS = sin(theta)*dtheta*dphi
@@ -4184,9 +5924,8 @@ class OctahedronCylindersNanoObject(NanoObject):
 
                 F = self.form_factor(qx, qy, qz)
 
-                P += np.abs(F*F.conjugate() * dS)
+                P += np.abs(F)**2 * dS
 
-        self.pargs['delta_theta'] = dthtmp
 
         return P
 
@@ -4198,16 +5937,11 @@ class OctahedronCylindersNanoObject(NanoObject):
         by P(q)"""
         return self.form_factor_intensity_isotropic(q_list, num_phi=num_phi, num_theta=num_theta)
 
-# OctahedralCylindersNanoObject
-###################################################################
-class OctahedralCylindersNanoObject(NanoObject):
-    """An octahedral cylinders nano-object. The canonical (unrotated) version
-    has the square cross-section in the x-y plane, with corners pointing along +z and -z.
-    The corners are on the x-axis and y-axis. The edges are 45 degrees to the
-        x and y axes.
-
-        Note : need to specify the cylinders to use here. Could be polydisperse
-        or not etc.
+class SpinyOctahedronCylindersNanoObject(NanoObject):
+    """An octahedral cylinders nano-object with protruding cylinders. The
+    canonical (unrotated) version has the square cross-section in the x-y
+    plane, with corners pointing along +z and -z.  The corners are on the
+    x-axis and y-axis. The edges are 45 degrees to the x and y axes.
 
         Some notes: I had a few options here. One is I could have successively
             built objects upon objects:
@@ -4220,15 +5954,12 @@ class OctahedralCylindersNanoObject(NanoObject):
             notes about rotations:
                 - i need to dot the rotation matrix of the ocahedron with each individula
                         cylinder's rotationo element
+            edgelength : length of edge
+            edgespread : how much to expand the rods by (not a good name)
+                positive is expansion, negative is compression
+            edgesep : separation of element from edge
     """
-    def __init__(self, CylinderClass, pargs={}, seed=None):
-        ''' CylinderClass : the class to instantiate cylinders.
-            pargs : the usual
-                - whatever cylinder class needs
-                - the angles
-                - edgelength : the edge length (note : not necessarily same as cylinder
-                        edge lengths, normally specified as "height")
-        '''
+    def __init__(self, baseObject=None, pargs={}, seed=None):
 
         #self.rotation_matrix = np.identity(3)
 
@@ -4237,15 +5968,269 @@ class OctahedralCylindersNanoObject(NanoObject):
                             'radius': None, \
                             'height': None, \
                             'edgelength': None, \
+                            'spinelength': None, \
+                            'edgesep': None, \
                     }
+
+        if baseObject is None:
+            baseObject = CylinderNanoObject
 
         self.pargs.update(pargs)
         self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
 
-        # residual code, need to clean up
-        if self.pargs['radius']==None or self.pargs['height']==None:
+        #if self.pargs['radius']==None or self.pargs['height']==None:
             # user did not specify radius or height should be an error
-            print("Error, did not specify radius or height, setting defaults")
+            #print("Error, did not specify radius or height, setting defaults")
+
+
+        # Set defaults
+        if 'radius' not in self.pargs:
+            self.pargs['radius'] = 1.0
+        if 'edgeshift' not in self.pargs:
+            self.pargs['edgeshift'] = 1.0
+        if 'height' not in self.pargs:
+            self.pargs['height'] = 1.0
+        if 'edgelength' not in self.pargs:
+            self.pargs['edgelength'] = 1.0
+        if 'spinelength' not in self.pargs:
+            self.pargs['edgelength'] = 1.0
+        if 'edgespread' not in self.pargs:
+            self.pargs['edgespread'] = 0.0
+        if 'eta' not in self.pargs:
+            self.pargs['eta'] = 0.0
+        if 'phi' not in self.pargs:
+            self.pargs['phi'] = 0.0
+        if 'theta' not in self.pargs:
+            self.pargs['theta'] = 0.0
+        if 'delta_theta' not in self.pargs:
+            self.pargs['delta_theta'] = 0.0
+        if 'num_theta' not in self.pargs:
+            self.pargs['num_theta'] = 50
+        if 'x0' not in self.pargs:
+            self.pargs['x0'] = 0.0
+        if 'y0' not in self.pargs:
+            self.pargs['y0'] = 0.0
+        if 'z0' not in self.pargs:
+            self.pargs['z0'] = 0.0
+
+        # these are slight shifts per cyl along the axis
+        # positive is away from COM and negative towards
+        shiftlabels = [
+            # these correspond to the poslist
+            'CYZ1', 'CXZ1', 'CYZ2', 'CXZ2',
+            'CXY1', 'CXY4', 'CXY3', 'CXY2',
+            'CYZ3', 'CXZ3', 'CYZ4', 'CXZ4',
+            'spinepz', 'spinemz', 'spinepx', 'spinemx',
+            'spinepy', 'spinemy',
+        ]
+
+        # you flip x or y from original shifts to move along edge axis
+        # not a good explanation but some sort of personal bookkeeping for now...
+        shiftfacs = np.array([
+            # top 
+            [0,-1,1],
+            [-1,0,1],
+            [0,1,1],
+            [1, 0,1],
+            # middle
+            [-1,1,0],
+            [-1,-1,0],
+            [1,-1,0],
+            [1,1,0],
+            # bottom
+            [0,1,-1],
+            [1, 0, -1],
+            [0,-1, -1],
+            [-1,0,-1],
+            # spines
+            [0,0,1],
+            [0,0,-1],
+            [1,0,0],
+            [-1,0,0],
+            [0,1,0],
+            [0,-1,0],
+        ])
+
+        for lbl1 in shiftlabels:
+            if lbl1 not in self.pargs:
+                self.pargs[lbl1] = 0.
+
+
+        self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
+        self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
+
+        fac1 = np.sqrt(2)/2.*((.5*self.pargs['edgelength']) + self.pargs['edgespread'])
+        sL = self.pargs['spinelength']
+        eL = self.pargs['edgelength']
+
+        poslist = np.array([
+        # top part
+        [0, 45, -90, 0, fac1, fac1],
+        [0, 45, 0, fac1, 0, fac1],
+        [0, 45, 90, 0, -fac1, fac1],
+        [0, -45, 0, -fac1, 0, fac1],
+        # now the flat part
+        [0, 90, 45, fac1, fac1, 0],
+        [0, 90, -45, fac1, -fac1, 0],
+        [0, 90, 45, -fac1, -fac1, 0],
+        [0, 90, -45, -fac1, fac1, 0],
+        # finally bottom part
+        [0, 45, -90, 0, -fac1,-fac1],
+        [0, 45, 0, -fac1, 0, -fac1],
+        [0, 45, 90, 0, fac1, -fac1],
+        [0, -45, 0, fac1, 0, -fac1],
+        # now the spines
+        [0, 0, 0, 0, 0, eL/np.sqrt(2) + sL/2.],
+        [0, 0, 0, 0, 0, -eL/np.sqrt(2) - sL/2.],
+        [0, 90, 0, eL/np.sqrt(2) + sL/2.,0,0],
+        [0, 90, 0, -eL/np.sqrt(2) - sL/2.,0,0],
+        [0, 90, 90, 0, eL/np.sqrt(2) + sL/2., 0],
+        [0, 90, 90, 0, -eL/np.sqrt(2) - sL/2., 0],
+        ])
+
+        # now add the shift factors
+        for i in range(len(poslist)):
+            poslist[i, 3:] += np.sqrt(2)/2.*shiftfacs[i]*self.pargs[shiftlabels[i]]
+
+
+        self.cylinderobjects = list()
+        for i, pos  in enumerate(poslist):
+            eta, phi, theta, x0, y0, z0 = pos
+            pargsnew = pargs.copy()
+
+            if 'spine' in shiftlabels[i]:
+                pargsnew['height'] = sL
+                if np.abs(sL) < 1e-8:
+                    continue
+            cyl = baseObject(pargs=pargsnew)
+            cyl.set_angles(eta=eta, phi=phi, theta=theta)
+            cyl.set_origin(x0=x0, y0=y0, z0=z0)
+            self.cylinderobjects.append(cyl)
+
+
+        #if 'cache_results' not in self.pargs:
+            #self.pargs['cache_results' ] = True
+        #self.form_factor_isotropic_already_computed = {}
+
+
+    def V(self, in_x, in_y, in_z, rotation_elements=None):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates.
+            rotation_elements is an extra rotation to add on top of the built
+            in rotation (from eta, phi, theta elements in object)
+
+        """
+        # TODO: This makes assumptions about there being no rotation
+        # need to add extra rotation of octahedron
+        V = 0.
+        for cyl in self.cylinderobjects:
+            V = V + cyl.V(*self.map_rcoord(np.array([in_x, in_y, in_z])))
+
+        return V
+
+
+    def get_phase(self, qx, qy, qz):
+        ''' Get the phase factor from the shift'''
+        phase = np.exp(1j*qx*self.pargs['x0'])
+        phase *= np.exp(1j*qy*self.pargs['y0'])
+        phase *= np.exp(1j*qz*self.pargs['z0'])
+
+        return phase
+
+    def form_factor(self, qx, qy, qz):
+        """Returns the complex-amplitude of the form factor at the given
+        q-coordinates."""
+        # phase must be calculated with respect to parent coordinate
+        phase = self.get_phase(qx,qy,qz)
+
+        qx, qy, qz = self.map_qcoord(np.array([qx, qy, qz]))
+        # next a translation is a phase shift
+
+        F = 0 + 1j*0
+        for cyl in self.cylinderobjects:
+            F = F + cyl.form_factor(qx, qy, qz)
+
+        F *= phase
+
+        return F
+
+
+    def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+
+
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+        P = 0.0
+        for theta in theta_vals:
+            qz =  q*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            for phi in phi_vals:
+                qx = -q*sin(theta)*cos(phi)
+                qy =  q*sin(theta)*sin(phi)
+
+                F = self.form_factor(qx, qy, qz)
+
+                P += np.abs(F)**2 * dS
+
+
+        return P
+
+
+    def form_factor_intensity_isotropic_array(self, q_list, num_phi=70, num_theta=70):
+        """Returns the intensity of the form factor, under the assumption
+        of random orientation of the polyhedron. In other words, we
+        average over every possible orientation. This value is denoted
+        by P(q)"""
+        return self.form_factor_intensity_isotropic(q_list, num_phi=num_phi, num_theta=num_theta)
+# CylinderCrossNanoObject
+###################################################################
+class CylinderCrossNanoObject(NanoObject):
+    """An cylinder 3D cross, 6 cylinders make this up. The canonical (unrotated) version
+        is aligned along each of the axes.
+        Note: it's possible to have cylinders not touch by simply varying their heigh with
+            respect to the lattice constant. They will be assumed to be centered in a symmetric fashion.
+
+        Some notes: I had a few options here. One is I could have successively
+            built objects upon objects:
+                - first take two cylinders together, make one piece
+                - rotate these pairs around z to make top pyramid
+                - flip and sum both to make pyramid
+            however, each level of the object requires a recursive set of rotations
+            It is best to just brute force define all the terms in one shot,
+                which I chose to do here.
+            notes about rotations:
+                - i need to dot the rotation matrix of the ocahedron with each individula
+                        cylinder's rotationo element
+            edgelength : length of edge
+            edgesep : separation of element from edge
+    """
+    def __init__(self, baseObject=None, pargs={}, seed=None):
+
+        #self.rotation_matrix = np.identity(3)
+
+        self.pargs = {   'rho_ambient': 0.0, \
+                            'rho1': 15.0, \
+                            'radius': None, \
+                            'height': None, \
+                            'edgelength': None, \
+                            'edgesep': None, \
+                    }
+
+        if baseObject is None:
+            baseObject = CylinderNanoObject
+
+        self.pargs.update(pargs)
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho1'] )
+
+        #if self.pargs['radius']==None or self.pargs['height']==None:
+            # user did not specify radius or height should be an error
+            #print("Error, did not specify radius or height, setting defaults")
 
 
         # Set defaults
@@ -4275,24 +6260,18 @@ class OctahedralCylindersNanoObject(NanoObject):
         self.set_angles(eta=self.pargs['eta'], phi=self.pargs['phi'], theta=self.pargs['theta'])
         self.set_origin(x0=self.pargs['x0'], y0=self.pargs['y0'], z0=self.pargs['z0'])
 
-        fac1 = np.sqrt(2)/2.*(.5*self.pargs['edgelength'] + 2*self.pargs['radius'])
+        L = self.pargs['edgelength']
 
         poslist = np.array([
-        # top part
-        [0, 45, -90, 0, fac1, fac1],
-        [0, 45, 0, fac1, 0, fac1],
-        [0, 45, 90, 0, -fac1, fac1],
-        [0, -45, 0, -fac1, 0, fac1],
-        # now the flat part
-        [0, 90, 45, fac1, fac1, 0],
-        [0, 90, -45, fac1, -fac1, 0],
-        [0, 90, 45, -fac1, -fac1, 0],
-        [0, 90, -45, -fac1, fac1, 0],
-        # finally bottom part
-        [0, 45, -90, 0, -fac1,-fac1],
-        [0, 45, 0, -fac1, 0, -fac1],
-        [0, 45, 90, 0, fac1, -fac1],
-        [0, -45, 0, fac1, 0, -fac1],
+        # z axis top part
+        [0, 0, 0, 0, 0, L/2.],
+        [0, 0, 0, 0, 0, -L/2.],
+        # y axis top part
+        [0, 90, 0, L/2., 0, 0],
+        [0, 90, 0, -L/2., 0., 0],
+        # x axis top part
+        [0, 90, 90, 0, L/2., 0],
+        [0, 90, 90, 0, -L/2., 0],
         ])
 
 
@@ -4300,7 +6279,7 @@ class OctahedralCylindersNanoObject(NanoObject):
         for pos  in poslist:
             eta, phi, theta, x0, y0, z0 = pos
 
-            cyl = CylinderClass(pargs=pargs)
+            cyl = baseObject(pargs=pargs)
             cyl.set_angles(eta=eta, phi=phi, theta=theta)
             cyl.set_origin(x0=x0, y0=y0, z0=z0)
             self.cylinderobjects.append(cyl)
@@ -4452,7 +6431,8 @@ class OctahedralCylindersNanoObject(NanoObject):
         by P(q)"""
         return self.form_factor_intensity_isotropic(q_list, num_phi=num_phi, num_theta=num_theta)
 
-# OctahedronSixCylinderNanoObject
+
+# OctahedronSixCylindersNanoObject
 ###################################################################
 class OctahedronSixCylindersNanoObject(NanoObject):
     """An octahedral cylinders nano-object. The canonical (unrotated) version
@@ -5031,6 +7011,9 @@ class Lattice(object):
     beta, gamma) and then have objects inherit this, such as FCC BCC here.
     Finally, you need to add a list of NanoObjects with form factors for this
     to work.
+
+    sigma_D : the DW factor. Can be one number or a two tuple:
+            (unit normal, DW factor) pair
     """
 
     # Initialization
@@ -5066,7 +7049,7 @@ class Lattice(object):
             self.gamma = radians(gamma)
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
 
 
@@ -5122,7 +7105,9 @@ class Lattice(object):
 
 
     def update_sigma_D(self, sigma_D):
-        self.sigma_D = sigma_D
+        '''sigma_D : the DW factor. Can be one number or a two tuple:
+        (unit normal, DW factor) pair '''
+        self.sigma_D = np.array(sigma_D)
 
 
     def object_count(self, objects):
@@ -5134,6 +7119,24 @@ class Lattice(object):
         V = np.sqrt( 1 - (cos(self.alpha))**2 - (cos(self.beta))**2 - (cos(self.gamma))**2 + 2*cos(self.alpha)*cos(self.beta)*cos(self.gamma) )
         V *= self.lattice_spacing_a*self.lattice_spacing_b*self.lattice_spacing_c
 
+        return V
+
+    def V(self, x, y, z):
+        ''' Look at a slice'''
+        V = np.zeros_like(x)
+        for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
+            # trick to get positions right, set object at displaced position
+            # calculate the volume then bring back
+            x0 = obj.pargs['x0']
+            y0 = obj.pargs['y0']
+            z0 = obj.pargs['z0']
+            obj.pargs['x0'] = x0 + xi*self.lattice_spacing_a
+            obj.pargs['y0'] = y0 + yi*self.lattice_spacing_b
+            obj.pargs['z0'] = z0 + zi*self.lattice_spacing_c
+            V += obj.V(x,y,z)
+            obj.pargs['x0'] = x0
+            obj.pargs['y0'] = y0
+            obj.pargs['z0'] = z0
         return V
 
 
@@ -5252,13 +7255,13 @@ class Lattice(object):
         """Returns the sum over particles in the unit cell."""
 
         summation = 0
-        for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
-            e_term = cexp( 2*np.pi * 1j * ( xi*h + yi*k + zi*l ) )
+        # TODO: doublecheck rotation
+        # (rotate qhkl based on the orientation of the particle in the unit cell; right now
+        # this is being handled by setting orientation angles to the particular NanoObjects)
+        qx, qy, qz = qhkl_vector
 
-            # TODO: doublecheck rotation
-            # (rotate qhkl based on the orientation of the particle in the unit cell; right now
-            # this is being handled by setting orientation angles to the particular NanoObjects)
-            qx, qy, qz = qhkl_vector
+        for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
+            e_term = np.exp( 2*np.pi * 1j * ( xi*h + yi*k + zi*l ) )
 
             summation += e_term*obj.form_factor( qx, qy, qz )
             if np.any(np.isnan(summation)):
@@ -5279,15 +7282,49 @@ class Lattice(object):
 
             fs = self.sum_over_objects(qhkl_vector, h, k, l)
             term1 = fs*fs.conjugate()
-            term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            # if 
+            #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            term2 = self.G_q(qhkl_vector)
             term3 = peak.val( q-qhkl )
 
             summation += (m*(f**2)) * term1.real * term2 * term3
 
         return summation
 
-
     def sum_over_hkl_array(self, q_list, peak, max_hkl=6):
+
+        summation = np.zeros( (len(q_list)) )
+        # save objects in a list first, then grab them, then compute the values
+        # faster generally... this is crude but eventually we should be 
+        # able to improve it
+        # TODO : have not finished this yet, keeping old version uncommented
+        hkl_info = self.iterate_over_hkl(max_hkl=max_hkl)
+        # expand
+        #hkl_info = np.array([h,k,l,m,f,qhkl, qvec[0], qvec[1], qvec[2] for
+        #                         h,k,l,m,f,qhkl,qvec in hkl_info])
+        #hkls = hkl_info[:,0:3]
+        #ms = hkl_info[:,3]
+        #fs = hkl_info[:,4]
+        #qhkls = hkl_info[:,5]
+        #qhkl_vecs = hkl_info[:,6:9]
+
+
+        for h, k, l, m, f, qhkl, qhkl_vector in hkl_info:
+
+            fs = self.sum_over_objects(qhkl_vector, h, k, l)
+            term1 = fs*fs.conjugate()
+            # Debye Waller factor
+            #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            term2 = self.G_q(qhkl_vector)
+
+            summation += (m*(f**2)) * term1.real * term2 * peak.val_array( q_list, qhkl )
+
+        return summation
+
+
+
+    def sum_over_hkl_array_old(self, q_list, peak, max_hkl=6):
+        ''' Deprecated version. Leaving for now just for comparisons to new code.'''
 
 
         summation = np.zeros( (len(q_list)) )
@@ -5341,6 +7378,28 @@ class Lattice(object):
     # Form factor computations
     ########################################
 
+    def G_q(self,q):
+        ''' the G(q) from the Debye-Waller factor.
+            If sigma_D is a two tuple, then compute the DW factor per unit
+            normal.
+            q must be a 3-vector
+
+            Note : normalized to lattice_spacing for now for backwards compatibility
+            so sigma = 1/(2sd ld)
+        '''
+        if self.sigma_D.ndim == 0:
+            res = np.exp( -(self.sigma_D**2) * (np.linalg.norm(q)**2 * self.lattice_spacing_a**2) )
+        else:
+            res = 1.
+            for sd, unrmx, unrmy, unrmz in self.sigma_D:
+                # need to fix later, should be array form
+                u = np.array([unrmx,unrmy, unrmz])
+                res *= np.exp( -(sd**2) * (np.dot(q,u)**2) * (self.lattice_spacing_a**2) )
+        return res
+
+
+
+
     def form_factor_intensity_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the isotropic form factor for the lattice. This is the
         scattering intensity one would measure if the component particles were
@@ -5352,6 +7411,64 @@ class Lattice(object):
             P += obj.form_factor_intensity_isotropic(q, num_phi=num_phi, num_theta=num_theta)
 
         return P
+
+    def form_factor_intensity_array(self, qx, qy, qz):
+
+        # Compute P(q) by summing each object's P(q) (form_factor_intensity_isotropic)
+        P = np.zeros_like(qx,dtype=complex)
+        for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
+            xi = xi*self.lattice_spacing_a
+            yi = yi*self.lattice_spacing_b
+            zi = zi*self.lattice_spacing_c
+            P += obj.form_factor(qx, qy, qz)*np.exp(1j*(qx*xi + qy*yi + qz*zi))
+
+        return np.abs(P)**2
+
+    def form_factor_intensity_isotropic_oriented(self, q_list, num_phi=50, num_theta=50):
+        """Returns a 1D array of the isotropic form factor.
+            This is like form_factor_intensity_isotropic, except the distances
+            between the particles is assumed to remain the same.
+
+            Note for polydispersity :  a correction of <|F|^2> - <|F|>^2 needs to be added
+                (Fisotmp and Fiso2tmp)
+                For non polydisperse samples, this is just zero
+        """
+        # Using array methods is at least 2X faster
+        phi_vals, dphi = np.linspace( 0, 2*np.pi, num_phi, endpoint=False, retstep=True )
+        theta_vals, dtheta = np.linspace( 0, np.pi, num_theta, endpoint=False, retstep=True )
+
+        F = np.zeros( (len(q_list)), dtype=np.float )
+        Ftmp = np.zeros( (len(q_list)), dtype=np.complex )
+        Fisotmp = np.zeros( (len(q_list)), dtype=np.float)
+        Fiso2tmp = np.zeros( (len(q_list)), dtype=np.float)
+
+        dStot = 0.
+
+        # for each theta phi, compute isotropic intensity
+        for theta in theta_vals:
+            qz =  q_list*cos(theta)
+            dS = sin(theta)*dtheta*dphi
+
+            qy_partial = q_list*sin(theta)
+            for phi in phi_vals:
+                qx = -qy_partial*cos(phi)
+                qy =  qy_partial*sin(phi)
+                Ftmp *= 0
+                Fisotmp *= 0
+
+                for i, pos, xi, yi, zi, obj in self.iterate_over_objects():
+                    xi = xi*self.lattice_spacing_a
+                    yi = yi*self.lattice_spacing_b
+                    zi = zi*self.lattice_spacing_c
+                    Ftmp += obj.form_factor(qx, qy, qz)*np.exp(1j*(qx*xi + qy*yi + qz*zi))
+                    Fisotmp += np.abs(obj.form_factor(qx,qy,qz))**2
+                    Fiso2tmp += obj.form_factor_squared(qx,qy,qz)
+
+                F += (np.abs(Ftmp)**2 + Fiso2tmp - Fisotmp)*dS
+                # now subtract form factor iso and add form factor squared
+                dStot += dS
+
+        return F/dStot
 
     def form_factor_intensity_isotropic_array(self, q_list, num_phi=50, num_theta=50):
 
@@ -5415,7 +7532,7 @@ class Lattice(object):
 
     def P_beta(self, q, num_phi=50, num_theta=50, approx=False):
 
-        P = self.form_factor_intensity_isotropic_array( q_list, num_phi=num_phi, num_theta=num_theta)
+        P = self.form_factor_intensity_isotropic_array( q, num_phi=num_phi, num_theta=num_theta)
         if approx:
             beta = self.beta_ratio(q, num_phi=num_phi, num_theta=num_theta, approx=True)
         else:
@@ -5469,7 +7586,9 @@ class Lattice(object):
 
 
     def intensity(self, q, peak, c=1.0, background=None, max_hkl=6):
-        """Returns the predicted scattering intensity."""
+        """Returns the predicted scattering intensity.
+            This is Z0(q) in Kevin's paper
+        """
 
         PS = (c/(q**2))*self.sum_over_hkl(q, peak, max_hkl=max_hkl)
 
@@ -5727,6 +7846,400 @@ class Lattice(object):
 
         return s
 
+# Lattice1D
+###################################################################
+class Lattice1D(Lattice):
+    """Defines a 1D lattice type and provides methods for adding objects to the
+    lattice. This is the starting point of all the crystalline samples.  It is
+    recommended here to set the basis vectors (lattice spacing, and alpha,
+    beta, gamma) and then have objects inherit this, such as FCC BCC here.
+    Finally, you need to add a list of NanoObjects with form factors for this
+    to work.
+
+    NOTE : This is for a 1D lattice floating in solution (the isotropic average
+    makes this assumption).
+    """
+
+    # Initialization
+    ########################################
+    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None, lattice_spacing_c=None, alpha=90, beta=None, gamma=None, sigma_D=0.01):
+
+        self.init_containers()
+
+        self.min_objects = 1
+        self.expected_objects = 8
+        self.object_count(objects)
+
+        self.objects = objects
+
+        self.lattice_spacing_a = lattice_spacing_a
+        if lattice_spacing_b==None:
+            self.lattice_spacing_b = lattice_spacing_a
+        else:
+            self.lattice_spacing_b = lattice_spacing_b
+        if lattice_spacing_c==None:
+            self.lattice_spacing_c = lattice_spacing_a
+        else:
+            self.lattice_spacing_c = lattice_spacing_c
+
+        self.alpha = radians(alpha)
+        if beta==None:
+            self.beta = radians(alpha)
+        else:
+            self.beta = radians(beta)
+        if gamma==None:
+            self.gamma = radians(alpha)
+        else:
+            self.gamma = radians(gamma)
+
+
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
+
+
+
+        # Define the lattice
+        self.symmetry = {}
+        self.symmetry['crystal family'] = 'triclinic'
+        self.symmetry['crystal system'] = 'triclinic'
+        self.symmetry['Bravais lattice'] = 'P'
+        self.symmetry['crystal class'] = 'pedial'
+        self.symmetry['point group'] = '1'
+        self.symmetry['space group'] = 'P1'
+
+        self.positions = ['---']
+        self.lattice_positions = ['front face, top left', \
+                                    'front face, top right', \
+                                    'front face, bottom left', \
+                                    'front face, bottom right', \
+                                    'bottom face, top left', \
+                                    'bottom face, top right', \
+                                    'bottom face, bottom left', \
+                                    'bottom face, bottom right', \
+                                ]
+        self.lattice_coordinates = [ (1.0, 0.0, 1.0), \
+                                        (1.0, 1.0, 1.0), \
+                                        (1.0, 0.0, 0.0), \
+                                        (1.0, 1.0, 0.0), \
+                                        (0.0, 0.0, 1.0), \
+                                        (0.0, 1.0, 1.0), \
+                                        (0.0, 0.0, 0.0), \
+                                        (0.0, 1.0, 0.0), \
+                                    ]
+        self.lattice_objects = [ self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                ]
+
+    # overwrite for 2D
+    def iterate_over_hkl_compute(self, max_hkl=12):
+        """Returns a sequence of hkl lattice peaks (reflections).
+            For 1D in solution, we sum only on l. Multiplicity should go as l.
+            (ignoring form factor decay)
+        """
+
+        # r will contain the return value, an array with rows that contain:
+        # h, k, l, peak multiplicity, symmetry factor, qhkl, qhkl_vector
+        r = []
+
+        # for 2D version, there is no l
+        h = 0
+        k = 0
+        # just sum positive l, and multiplicity takes count of other reflection
+        for l in range(0,max_hkl+1):
+            # Don't put a reflection at origin
+            if not (h==0 and k==0 and l==0):
+                m = self.multiplicity_lookup(h, k, l)
+                f = self.symmetry_factor(h, k, l)
+                if m!=0 and f!=0:
+                    qhkl, qhkl_vector = self.q_hkl(h,k,l)
+                    r.append( [ h, k, l, m, f, qhkl, qhkl_vector ] )
+
+        return r
+
+    def multiplicity_lookup(self,h,k,l):
+        ''' This is for 1D version.
+            If form factor did not affect data, multiplicity is 2*l.
+            (assuming sum on h positive only)
+            ignore, h,k
+        '''
+        return 2*l
+
+
+
+# Lattice2D
+###################################################################
+class Lattice2D(Lattice):
+    """Defines a 2D lattice type and provides methods for adding objects to the
+    lattice. This is the starting point of all the crystalline samples.  It is
+    recommended here to set the basis vectors (lattice spacing, and alpha,
+    beta, gamma) and then have objects inherit this, such as FCC BCC here.
+    Finally, you need to add a list of NanoObjects with form factors for this
+    to work.
+
+    NOTE : This is for a static 2D lattice, not a 2D lattice in solution.
+    If in solution, the q dependence of the intensty becomes 1/q^2, not 1/q (because
+        you average in 3D space)
+    """
+
+    # Initialization
+    ########################################
+    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None, lattice_spacing_c=None, alpha=90, beta=None, gamma=None, sigma_D=0.01):
+
+        self.init_containers()
+
+        self.min_objects = 1
+        self.expected_objects = 8
+        self.object_count(objects)
+
+        self.objects = objects
+
+        self.lattice_spacing_a = lattice_spacing_a
+        if lattice_spacing_b==None:
+            self.lattice_spacing_b = lattice_spacing_a
+        else:
+            self.lattice_spacing_b = lattice_spacing_b
+        if lattice_spacing_c==None:
+            self.lattice_spacing_c = lattice_spacing_a
+        else:
+            self.lattice_spacing_c = lattice_spacing_c
+
+        self.alpha = radians(alpha)
+        if beta==None:
+            self.beta = radians(alpha)
+        else:
+            self.beta = radians(beta)
+        if gamma==None:
+            self.gamma = radians(alpha)
+        else:
+            self.gamma = radians(gamma)
+
+
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
+
+
+
+        # Define the lattice
+        self.symmetry = {}
+        self.symmetry['crystal family'] = 'triclinic'
+        self.symmetry['crystal system'] = 'triclinic'
+        self.symmetry['Bravais lattice'] = 'P'
+        self.symmetry['crystal class'] = 'pedial'
+        self.symmetry['point group'] = '1'
+        self.symmetry['space group'] = 'P1'
+
+        self.positions = ['---']
+        self.lattice_positions = ['front face, top left', \
+                                    'front face, top right', \
+                                    'front face, bottom left', \
+                                    'front face, bottom right', \
+                                    'bottom face, top left', \
+                                    'bottom face, top right', \
+                                    'bottom face, bottom left', \
+                                    'bottom face, bottom right', \
+                                ]
+        self.lattice_coordinates = [ (1.0, 0.0, 1.0), \
+                                        (1.0, 1.0, 1.0), \
+                                        (1.0, 0.0, 0.0), \
+                                        (1.0, 1.0, 0.0), \
+                                        (0.0, 0.0, 1.0), \
+                                        (0.0, 1.0, 1.0), \
+                                        (0.0, 0.0, 0.0), \
+                                        (0.0, 1.0, 0.0), \
+                                    ]
+        self.lattice_objects = [ self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                    self.objects[0], \
+                                ]
+
+    # overwrite for 2D
+    def iterate_over_hkl_compute(self, max_hkl=12):
+        """Returns a sequence of hkl lattice peaks (reflections)."""
+
+        # r will contain the return value, an array with rows that contain:
+        # h, k, l, peak multiplicity, symmetry factor, qhkl, qhkl_vector
+        r = []
+
+        # for 2D version, there is no l
+        l = 0
+        for h in range(-max_hkl,max_hkl+1):
+            for k in range(-max_hkl,max_hkl+1):
+                    # Don't put a reflection at origin
+                    if not (h==0 and k==0 and l==0):
+                        m = self.multiplicity_lookup(h, k, l)
+                        f = self.symmetry_factor(h, k, l)
+                        if m!=0 and f!=0:
+                            qhkl, qhkl_vector = self.q_hkl(h,k,l)
+                            r.append( [ h, k, l, m, f, qhkl, qhkl_vector ] )
+
+        return r
+
+
+    # Final S(q) and Z_0(q)
+    ########################################
+
+    # modify for 2D
+    def structure_factor_isotropic(self, q, peak, c=1.0, background=None, max_hkl=6):
+        """Returns the structure factor S(q) for the specified q-position."""
+
+        P = self.form_factor_intensity_isotropic(q)
+
+        # for 2D lattice it's 1/q not 1/q**2
+        S = (c/(q * P))*self.sum_over_hkl(q, peak, max_hkl=max_hkl)
+
+        if background==None:
+            return S
+        else:
+            return S + background.val(q)/P
+
+
+    # modify for 2D
+    def structure_factor_isotropic_array(self, q_list, peak, c=1.0, background=None, max_hkl=6):
+        """Returns the structure factor S(q) for the specified q-position."""
+
+        P = self.form_factor_intensity_isotropic_array(q_list)
+
+        # for 2D lattice it's 1/q not 1/q**2
+        S = (c/(q_list * P))*self.sum_over_hkl_array(q_list, peak, max_hkl=max_hkl)
+        #S = (c/(q_list**2 ))*self.sum_over_hkl_array(q_list, peak, max_hkl=max_hkl)
+
+        if background==None:
+            return S
+        else:
+            return S + background.val_array(q_list)/P
+
+
+    # modify for 2D
+    def intensity(self, q, peak, c=1.0, background=None, max_hkl=6):
+        """Returns the predicted scattering intensity."""
+
+        # for 2D lattice it's 1/q not 1/q**2
+        PS = (c/q)*self.sum_over_hkl(q, peak, max_hkl=max_hkl)
+
+        if background==None:
+            return PS
+        else:
+            return background.val(q) + PS
+
+    def intensity_array(self, q_list, peak, c=1.0, background=None, max_hkl=6):
+        """Returns the predicted scattering intensity."""
+
+        # for 2D lattice it's 1/q not 1/q**2
+        PS = (1.0/(q_list))*self.sum_over_hkl_array(q_list, peak, max_hkl=max_hkl)
+
+        if background==None:
+            return c*PS
+        else:
+            back = background.val_array(q_list)
+            return back + c*PS
+
+
+    def intensity_cache(self, q_list, peak, c=1.0, background=None, max_hkl=6):
+        """Returns the predicted scattering intensity.
+        This version using caching to increase performance. You must be mindful
+        to call cache_clear whenever parameters change."""
+
+        if self.PS_cache!=[]:
+            if background==None:
+                return c*self.PS_cache
+            else:
+                back = background.val_array(q_list)
+                return back + c*self.PS_cache
+        else:
+            # Something needs to be recalculated
+
+            # for 2D lattice it's 1/q not 1/q**2
+            PS = (1.0/(q_list))*self.sum_over_hkl_cache(q_list, peak, max_hkl=max_hkl)
+            self.PS_cache = PS
+
+            if background==None:
+                return c*PS
+            else:
+                back = background.val_array(q_list)
+                return back + c*PS
+
+
+# HexagonalLattice2D
+###################################################################
+class HexagonalLattice2D(Lattice2D):
+    ''' l doesn't matter at all, but it's left for simplcity of code. 
+        Note, this is for a planar hexagonal lattice (rotating in plane), *not*
+        floating in solution.
+    '''
+
+
+    # Initialization
+    ########################################
+    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None, alpha=90, beta=90, gamma=60, sigma_D=0.01):
+
+        self.init_containers()
+
+        self.min_objects = 1
+        self.expected_objects = 1
+        self.object_count(objects)
+
+        self.objects = objects
+
+        self.lattice_spacing_a = lattice_spacing_a
+        if lattice_spacing_b==None:
+            self.lattice_spacing_b = lattice_spacing_a
+        else:
+            self.lattice_spacing_b = lattice_spacing_b
+
+        # doesn't matter what this value is, we have a 2D system
+        self.lattice_spacing_c = lattice_spacing_a
+
+        self.alpha = radians(alpha)
+        if beta==None:
+            self.beta = radians(alpha)
+        else:
+            self.beta = radians(beta)
+        if gamma==None:
+            self.gamma = radians(alpha)
+        else:
+            self.gamma = radians(gamma)
+
+
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
+
+
+
+        # Define the lattice
+        self.symmetry = {}
+        self.symmetry['crystal family'] = 'triclinic'
+        self.symmetry['crystal system'] = 'triclinic'
+        self.symmetry['Bravais lattice'] = '?'
+        self.symmetry['crystal class'] = '?'
+        self.symmetry['point group'] = '?'
+        self.symmetry['space group'] = '?'
+
+        self.positions = ['---']
+        self.lattice_positions = ['main', \
+                                ]
+        self.lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                    ]
+        self.lattice_objects = [ self.objects[0], \
+                                ]
+
+    def q_hkl(self, h, k, l):
+        """Determines the position in reciprocal space for the given reflection."""
+
+        # NOTE: Valid for ideal hexagonal only
+        qhkl_vector = ( 2*np.pi*h/(self.lattice_spacing_a), \
+                        2*np.pi*(h+2*k)/(np.sqrt(3)*self.lattice_spacing_b), \
+                        2*np.pi*l/(self.lattice_spacing_c) )
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+
+        return (qhkl, qhkl_vector)
 
 # HexagonalLattice
 ###################################################################
@@ -5766,7 +8279,7 @@ class HexagonalLattice(Lattice):
             self.gamma = radians(gamma)
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
 
 
@@ -5827,7 +8340,7 @@ class OctahedralCylindersLattice(Lattice):
         self.lattice_spacing_c = lattice_spacing
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         fac1 = np.sqrt(2)/2.*(.5*edgelength + 2*pargs['radius'])
 
@@ -5859,7 +8372,7 @@ class OctahedralCylindersLattice(Lattice):
             phi = float(phi)
             x0, y0, z0 = float(x0), float(y0), float(z0)
 
-            cyl = PolydisperseCylinderNanoObject(pargs=pargs)
+            cyl = CylinderNanoObject(pargs=pargs)
             cyl.set_angles(eta=eta, phi=phi, theta=theta)
             #cyl.set_origin(x0=x0, y0=y0, z0=z0)
             self.lattice_coordinates.append((x0, y0, z0))
@@ -5898,7 +8411,7 @@ class BCCLattice(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6032,7 +8545,7 @@ class BodyCenteredTwoParticleLattice(BCCLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6092,7 +8605,7 @@ class BodyCenteredTwoParticleExtendedLattice(BodyCenteredTwoParticleLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6178,7 +8691,7 @@ class BodyCenteredTwoParticleExtendedRandomizedLattice(BodyCenteredTwoParticleLa
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6269,7 +8782,7 @@ class BodyCenteredTwoParticleExtendedJitteredLattice(BodyCenteredTwoParticleExte
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6368,7 +8881,7 @@ class BodyCenteredTwoParticleExtendedTwistedLattice(BodyCenteredTwoParticleExten
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6475,7 +8988,7 @@ class BodyCenteredTwoParticleExtendedOrientationalSpreadLattice(BodyCenteredTwoP
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6553,7 +9066,7 @@ class BodyCenteredEdgeFaceTwoParticleLattice(BCCLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         # Define the lattice
@@ -6625,7 +9138,7 @@ class FCCLattice(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6766,7 +9279,7 @@ class FaceCenteredFourParticleLattice(FCCLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6835,7 +9348,7 @@ class DiamondTwoParticleLattice(FCCLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6906,7 +9419,7 @@ class InterpenetratingDiamondTwoParticleLattice(DiamondTwoParticleLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -6994,7 +9507,7 @@ class DoubleFilledDiamondTwoParticleLattice(DiamondTwoParticleLattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -7073,7 +9586,7 @@ class CristobaliteLattice(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -7193,7 +9706,7 @@ class HexagonalDiamondLattice(HexagonalLattice):
             self.gamma = radians(gamma)
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
 
 
@@ -7265,7 +9778,7 @@ class AlternatingHexagonalDiamondLattice(HexagonalDiamondLattice):
             self.gamma = radians(gamma)
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
 
 
@@ -7335,7 +9848,7 @@ class AlongBondsHexagonalDiamondLattice(HexagonalDiamondLattice):
             self.gamma = radians(gamma)
 
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
 
 
@@ -7404,7 +9917,66 @@ class SimpleCubic(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
+
+        # Define the lattice
+        self.symmetry = {}
+        self.symmetry['crystal family'] = 'cubic'
+        self.symmetry['crystal system'] = 'cubic'
+        self.symmetry['Bravais lattice'] = 'P'
+        self.symmetry['crystal class'] = 'hexoctahedral'
+        self.symmetry['point group'] = 'm3m'
+        self.symmetry['space group'] = 'Pm3m'
+
+        self.positions = ['all']
+        self.lattice_positions = ['corner']
+
+
+        self.lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                    ]
+        self.lattice_objects = [ self.objects[0], \
+                                ]
+
+
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+
+        return 1
+
+
+
+    def unit_cell_volume(self):
+
+        return self.lattice_spacing_a**3
+
+# Ladder1D 
+###################################################################
+class Ladder1D(Lattice1D):
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+        ''' assumes elements here are stacked along the z direction.'''
+
+        self.init_containers()
+
+        self.min_objects = 1
+        self.expected_objects = 1
+        self.object_count(objects)
+
+        if len(objects)==1:
+            # Assume same object everywhere
+            self.objects = [ objects[0] ]
+        else:
+            # We only need four objects. Ignore everything else.
+            self.objects = objects[0:self.expected_objects]
+
+        self.lattice_spacing_a = lattice_spacing_a
+        self.lattice_spacing_b = lattice_spacing_a
+        self.lattice_spacing_c = lattice_spacing_a
+        self.alpha = radians(90)
+        self.beta = radians(90)
+        self.gamma = radians(90)
+
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -7468,7 +10040,7 @@ class OrthorhombicLattice(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -7527,7 +10099,7 @@ class AlternatingSimpleCubic(Lattice):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
@@ -7600,7 +10172,7 @@ class AlternatingSimpleCubicExtendedLattice(AlternatingSimpleCubic):
         self.beta = radians(90)
         self.gamma = radians(90)
 
-        self.sigma_D = sigma_D          # Lattice disorder
+        self.sigma_D = np.array(sigma_D)          # Lattice disorder
 
         # Define the lattice
         self.symmetry = {}
