@@ -64,8 +64,7 @@ all={'lightvel':['velocity of light in vacuum','c',cloc,0., 0.,'299 792 458(ex) 
      'gyromagratio-p':['proton gyromagnetic ratio','gamma_p',2.675222099e8,7.0,2.6e-8,'2.675 222 099(70) e8 s^-1 T^-1','CODATA 2006'],
      'magres-p':['magnetic resonance frequency proton = gamma_p/(2*pi)','',4.25774821e7,1.1,2.6e-8,'42.577 4821(11) MHz/T','CODATA 2006'],
      'rydberg':['Rydberg constant = alpha^2 m_e c/(2 h)','R_infty',10973731.568527,7.3e-5,6.6e-12,'10 973 731.568 527(73) m^-1','CODATA 2006'],
-     'stefan-boltzm':['Stefan-Boltzmann constant = pi^2 k^4/(60 hbar^3 c^2)','sigma',5.670400e-8,4.0e-13,7.0e-6,'5.670 400(40) e-8 W m^-2 K^-4','CODATA 2006']}             
-     
+     'stefan-boltzm':['Stefan-Boltzmann constant = pi^2 k^4/(60 hbar^3 c^2)','sigma',5.670400e-8,4.0e-13,7.0e-6,'5.670 400(40) e-8 W m^-2 K^-4','CODATA 2006']}
 
 # many common values are also available as global constants:
 global alpha,a_0,c,e,eps_0,F,G,g_e,g_p,gamma_p,h,hbar,k_B
@@ -131,9 +130,3 @@ def descr(key):
     print('  Relative stdev:     ',all[key][4])
     print('  value(sd) unit:     ',all[key][5])
     print('  Source:             ',all[key][6],'\n')
-    
-
-
-
-    
-  
