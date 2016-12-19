@@ -3804,7 +3804,7 @@ class PyramidNanoObject(NanoObject):
 
         w = np.where(q < 1e-6)
         if len(w[0]) > 0:
-            q[w] = self.pargs['delta_rho']*volume
+            q[w] = 1e-6#self.pargs['delta_rho']*volume
 
 
     def form_factor(self, qx, qy, qz):
@@ -3979,11 +3979,15 @@ class HollowOctahedronNanoObject(NanoObject):
         average over every possible orientation. This value is denoted
         by P(q)"""
 
-        R = self.pargs['radius']
-        H = self.pargs['height']
-        tan_alpha = np.tan(np.radians(self.pargs['pyramid_face_angle']))
+        Rin = self.pargs['inner_radius']
+        Rout = self.pargs['outer_radius']
+        Hout = self.outer_octa.pargs['height']
+        Hin = self.inner_octa.pargs['height']
+        tan_alpha = np.tan(np.radians(self.inner_octa.pargs['pyramid_face_angle']))
         amod = 1.0/tan_alpha
-        volume = (4.0/3.0)*tan_alpha*( R**3 - (R - H/tan_alpha)**3 )
+        volumeout = (4.0/3.0)*tan_alpha*( Rout**3 - (Rout - Hout/tan_alpha)**3 )
+        volumein = (4.0/3.0)*tan_alpha*( Rin**3 - (Rin - Hin/tan_alpha)**3 )
+        volume = volumeout - volumein
 
         # Note that we only integrate one of the 4 quadrants, since they are all identical
         # (we later multiply by 4 to compensate)
@@ -4027,7 +4031,6 @@ class OctahedronNanoObject(PyramidNanoObject):
 
         return Vu+Vd
 
-        return super(OctahedronNanoObject, self).V( in_x, in_y, abs(in_z), rotation_elements=rotation_elements )
 
 
 

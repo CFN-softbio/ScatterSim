@@ -1,0 +1,439 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module ScatterSim.Potentials</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="ScatterSim.html"><font color="#ffffff">ScatterSim</font></a>.Potentials</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/julienl/research/projects/ScatterSim/ScatterSim/Potentials.py">/home/julienl/research/projects/ScatterSim/ScatterSim/Potentials.py</a></font></td></tr></table>
+    <p><tt>#&nbsp;-*-&nbsp;coding:&nbsp;utf-8&nbsp;-*-<br>
+###################################################################<br>
+#&nbsp;Potentials.py<br>
+#&nbsp;version&nbsp;0.0.5<br>
+#&nbsp;April&nbsp;12,&nbsp;2010<br>
+###################################################################<br>
+#&nbsp;Author:&nbsp;Kevin&nbsp;G.&nbsp;Yager<br>
+#&nbsp;Affiliation:&nbsp;Brookhaven&nbsp;National&nbsp;Lab,&nbsp;Center&nbsp;for&nbsp;Functional&nbsp;Nanomaterials<br>
+###################################################################<br>
+#&nbsp;Description:<br>
+#&nbsp;&nbsp;This&nbsp;file&nbsp;stores&nbsp;a&nbsp;variety&nbsp;of&nbsp;potential&nbsp;objects.&nbsp;These&nbsp;objects<br>
+#&nbsp;define&nbsp;a&nbsp;real-space&nbsp;density&nbsp;distribution&nbsp;inside&nbsp;a&nbsp;material.&nbsp;They<br>
+#&nbsp;can&nbsp;be&nbsp;associated&nbsp;with&nbsp;modeling&nbsp;objects&nbsp;in&nbsp;order&nbsp;to&nbsp;calculate<br>
+#&nbsp;scattering&nbsp;patterns&nbsp;from&nbsp;the&nbsp;given&nbsp;real-space&nbsp;potential/density.<br>
+#&nbsp;&nbsp;The&nbsp;<a href="#FilmPotential">FilmPotential</a>&nbsp;object&nbsp;represents&nbsp;a&nbsp;thin&nbsp;film&nbsp;supported&nbsp;on&nbsp;a<br>
+#&nbsp;substrate.&nbsp;By&nbsp;extending&nbsp;this&nbsp;object,&nbsp;one&nbsp;can&nbsp;define&nbsp;a&nbsp;variety&nbsp;of<br>
+#&nbsp;structured&nbsp;thin&nbsp;films.<br>
+###################################################################</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="copy.html">copy</a><br>
+<a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="ScatterSim.physcon.html">ScatterSim.physcon</a><br>
+<a href="pylab.html">pylab</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>(<a href="builtins.html#object">builtins.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="ScatterSim.Potentials.html#HexagonalCylindersPotential">HexagonalCylindersPotential</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="ScatterSim.Potentials.html#HexagonalCylindersJitterPotential">HexagonalCylindersJitterPotential</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="ScatterSim.Potentials.html#NoisePotential">NoisePotential</a>
+</font></dt><dt><font face="helvetica, arial"><a href="ScatterSim.Potentials.html#TestPotential">TestPotential</a>
+</font></dt></dl>
+</dd>
+</dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="FilmPotential">class <strong>FilmPotential</strong></a>(<a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;potential&nbsp;describes&nbsp;a&nbsp;thin&nbsp;film.&nbsp;The&nbsp;density<br>
+above&nbsp;the&nbsp;film&nbsp;(ambient/superstrate)&nbsp;is&nbsp;set&nbsp;via<br>
+'rho_ambient'&nbsp;and&nbsp;the&nbsp;density&nbsp;below&nbsp;the&nbsp;film&nbsp;(substrate)<br>
+is&nbsp;set&nbsp;via&nbsp;'rho_substrate'.&nbsp;This&nbsp;is&nbsp;intended&nbsp;as&nbsp;a<br>
+base&nbsp;class&nbsp;that&nbsp;can&nbsp;be&nbsp;extended&nbsp;to&nbsp;describe&nbsp;arbitrary<br>
+nanostructure&nbsp;inside&nbsp;the&nbsp;thin&nbsp;film&nbsp;itself.&nbsp;However<br>
+this&nbsp;class&nbsp;can&nbsp;be&nbsp;used&nbsp;directly&nbsp;to&nbsp;simulate&nbsp;a&nbsp;film<br>
+with&nbsp;uniform&nbsp;internal&nbsp;density&nbsp;of&nbsp;'rho_film'.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a></dd>
+<dd><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="FilmPotential-V"><strong>V</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;potential.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-V_in_film"><strong>V_in_film</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;the&nbsp;potential&nbsp;in&nbsp;the&nbsp;thin&nbsp;film&nbsp;region&nbsp;(between<br>
+film&nbsp;surface&nbsp;and&nbsp;substrate&nbsp;interface).</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-__init__"><strong>__init__</strong></a>(self, pargs={})</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-rebuild"><strong>rebuild</strong></a>(self, pargs={})</dt><dd><tt>Allows&nbsp;a&nbsp;<a href="ScatterSim.BaseClasses.html#Potential">Potential</a>&nbsp;object&nbsp;to&nbsp;have&nbsp;its&nbsp;potential<br>
+arguments&nbsp;(pargs)&nbsp;updated.&nbsp;Note&nbsp;that&nbsp;this&nbsp;doesn't<br>
+replace&nbsp;the&nbsp;old&nbsp;pargs&nbsp;entirely.&nbsp;It&nbsp;only&nbsp;modifies&nbsp;<br>
+(or&nbsp;adds)&nbsp;the&nbsp;key/values&nbsp;provided&nbsp;by&nbsp;the&nbsp;new&nbsp;pargs.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-rotate_coordinates"><strong>rotate_coordinates</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Transforms&nbsp;from&nbsp;box&nbsp;coordinates&nbsp;into&nbsp;lattice&nbsp;coordinates,&nbsp;based<br>
+on&nbsp;the&nbsp;pre-set&nbsp;rotation&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-rotation_elements"><strong>rotation_elements</strong></a>(self, eta, phi, theta)</dt><dd><tt>Converts&nbsp;angles&nbsp;into&nbsp;an&nbsp;appropriate&nbsp;rotation&nbsp;matrix.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-set_angles"><strong>set_angles</strong></a>(self, eta=None, phi=None, theta=None)</dt><dd><tt>Update&nbsp;one&nbsp;or&nbsp;multiple&nbsp;angles.</tt></dd></dl>
+
+<dl><dt><a name="FilmPotential-to_string"><strong>to_string</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;string&nbsp;describing&nbsp;the&nbsp;potential.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>conversion_factor</strong> = 0.0001</dl>
+
+<dl><dt><strong>pargs</strong> = {'film_thickness': 100.0, 'rho1': 15.0, 'rho2': 10.0, 'rho_ambient': 0.0, 'rho_film': 10.0, 'rho_substrate': 20.1}</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="HexagonalCylindersJitterPotential">class <strong>HexagonalCylindersJitterPotential</strong></a>(<a href="ScatterSim.Potentials.html#HexagonalCylindersPotential">HexagonalCylindersPotential</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Hexagonally&nbsp;packed&nbsp;cylinders,&nbsp;with&nbsp;jitter&nbsp;(randomness)&nbsp;in<br>
+cylinder&nbsp;sizes&nbsp;and&nbsp;positions.<br>
+&nbsp;<br>
+pargs&nbsp;should&nbsp;contain:<br>
+&nbsp;rho_ambient&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;ambient<br>
+&nbsp;rho_substrate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;substrate<br>
+&nbsp;rho1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;cylinder&nbsp;cores<br>
+&nbsp;rho_film&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;matrix<br>
+&nbsp;radius&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;radius&nbsp;of&nbsp;cylinder&nbsp;cores<br>
+&nbsp;repeat_spacing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;center-to-center&nbsp;distance&nbsp;for&nbsp;hex&nbsp;lattice<br>
+&nbsp;interfacial_spread&nbsp;roughness&nbsp;of&nbsp;the&nbsp;cylinder/matrix&nbsp;boundary<br>
+&nbsp;positional_spread&nbsp;&nbsp;jitter&nbsp;of&nbsp;cylinder&nbsp;centers&nbsp;from&nbsp;ideal&nbsp;lattice<br>
+&nbsp;size_spread&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;jitter&nbsp;of&nbsp;cylinder&nbsp;sizes&nbsp;from&nbsp;the&nbsp;average&nbsp;radius<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ScatterSim.Potentials.html#HexagonalCylindersJitterPotential">HexagonalCylindersJitterPotential</a></dd>
+<dd><a href="ScatterSim.Potentials.html#HexagonalCylindersPotential">HexagonalCylindersPotential</a></dd>
+<dd><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a></dd>
+<dd><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HexagonalCylindersJitterPotential-V_in_film"><strong>V_in_film</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;the&nbsp;potential&nbsp;in&nbsp;the&nbsp;thin&nbsp;film&nbsp;region&nbsp;(between<br>
+film&nbsp;surface&nbsp;and&nbsp;substrate&nbsp;interface).</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-__init__"><strong>__init__</strong></a>(self, pargs={}, seed=2018)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-jitter"><strong>jitter</strong></a>(self, x, y)</dt><dd><tt>Returns&nbsp;the&nbsp;(jittered)&nbsp;position&nbsp;and&nbsp;size&nbsp;of&nbsp;the&nbsp;specified<br>
+cylinder&nbsp;object.&nbsp;This&nbsp;function&nbsp;stores&nbsp;computed&nbsp;jitters&nbsp;so&nbsp;that<br>
+they&nbsp;are&nbsp;not&nbsp;re-calculated,&nbsp;and&nbsp;so&nbsp;that&nbsp;they&nbsp;are&nbsp;consistent.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-to_string"><strong>to_string</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;string&nbsp;describing&nbsp;the&nbsp;potential.</tt></dd></dl>
+
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>position_jitters</strong> = defaultdict(&lt;function make_inner.&lt;locals&gt;.&lt;lambda&gt; at 0x7fa20a32f620&gt;, {})</dl>
+
+<hr>
+Methods inherited from <a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>:<br>
+<dl><dt><a name="HexagonalCylindersJitterPotential-V"><strong>V</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;potential.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-rebuild"><strong>rebuild</strong></a>(self, pargs={})</dt><dd><tt>Allows&nbsp;a&nbsp;<a href="ScatterSim.BaseClasses.html#Potential">Potential</a>&nbsp;object&nbsp;to&nbsp;have&nbsp;its&nbsp;potential<br>
+arguments&nbsp;(pargs)&nbsp;updated.&nbsp;Note&nbsp;that&nbsp;this&nbsp;doesn't<br>
+replace&nbsp;the&nbsp;old&nbsp;pargs&nbsp;entirely.&nbsp;It&nbsp;only&nbsp;modifies&nbsp;<br>
+(or&nbsp;adds)&nbsp;the&nbsp;key/values&nbsp;provided&nbsp;by&nbsp;the&nbsp;new&nbsp;pargs.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-rotate_coordinates"><strong>rotate_coordinates</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Transforms&nbsp;from&nbsp;box&nbsp;coordinates&nbsp;into&nbsp;lattice&nbsp;coordinates,&nbsp;based<br>
+on&nbsp;the&nbsp;pre-set&nbsp;rotation&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-rotation_elements"><strong>rotation_elements</strong></a>(self, eta, phi, theta)</dt><dd><tt>Converts&nbsp;angles&nbsp;into&nbsp;an&nbsp;appropriate&nbsp;rotation&nbsp;matrix.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersJitterPotential-set_angles"><strong>set_angles</strong></a>(self, eta=None, phi=None, theta=None)</dt><dd><tt>Update&nbsp;one&nbsp;or&nbsp;multiple&nbsp;angles.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>conversion_factor</strong> = 0.0001</dl>
+
+<dl><dt><strong>pargs</strong> = {'film_thickness': 100.0, 'rho1': 15.0, 'rho2': 10.0, 'rho_ambient': 0.0, 'rho_film': 10.0, 'rho_substrate': 20.1}</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="HexagonalCylindersPotential">class <strong>HexagonalCylindersPotential</strong></a>(<a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Hexagonally&nbsp;packed&nbsp;cylinders.<br>
+&nbsp;<br>
+pargs&nbsp;should&nbsp;contain:<br>
+&nbsp;rho_ambient&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;ambient<br>
+&nbsp;rho_substrate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;substrate<br>
+&nbsp;rho1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;cylinder&nbsp;cores<br>
+&nbsp;rho_film&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;matrix<br>
+&nbsp;radius&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;radius&nbsp;of&nbsp;cylinder&nbsp;cores<br>
+&nbsp;repeat_spacing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;center-to-center&nbsp;distance&nbsp;for&nbsp;hex&nbsp;lattice<br>
+&nbsp;interfacial_spread&nbsp;roughness&nbsp;of&nbsp;the&nbsp;cylinder/matrix&nbsp;boundary<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ScatterSim.Potentials.html#HexagonalCylindersPotential">HexagonalCylindersPotential</a></dd>
+<dd><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a></dd>
+<dd><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="HexagonalCylindersPotential-V_in_film"><strong>V_in_film</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;the&nbsp;potential&nbsp;in&nbsp;the&nbsp;thin&nbsp;film&nbsp;region&nbsp;(between<br>
+film&nbsp;surface&nbsp;and&nbsp;substrate&nbsp;interface).</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-to_string"><strong>to_string</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;string&nbsp;describing&nbsp;the&nbsp;potential.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>:<br>
+<dl><dt><a name="HexagonalCylindersPotential-V"><strong>V</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;potential.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-__init__"><strong>__init__</strong></a>(self, pargs={})</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-rebuild"><strong>rebuild</strong></a>(self, pargs={})</dt><dd><tt>Allows&nbsp;a&nbsp;<a href="ScatterSim.BaseClasses.html#Potential">Potential</a>&nbsp;object&nbsp;to&nbsp;have&nbsp;its&nbsp;potential<br>
+arguments&nbsp;(pargs)&nbsp;updated.&nbsp;Note&nbsp;that&nbsp;this&nbsp;doesn't<br>
+replace&nbsp;the&nbsp;old&nbsp;pargs&nbsp;entirely.&nbsp;It&nbsp;only&nbsp;modifies&nbsp;<br>
+(or&nbsp;adds)&nbsp;the&nbsp;key/values&nbsp;provided&nbsp;by&nbsp;the&nbsp;new&nbsp;pargs.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-rotate_coordinates"><strong>rotate_coordinates</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Transforms&nbsp;from&nbsp;box&nbsp;coordinates&nbsp;into&nbsp;lattice&nbsp;coordinates,&nbsp;based<br>
+on&nbsp;the&nbsp;pre-set&nbsp;rotation&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-rotation_elements"><strong>rotation_elements</strong></a>(self, eta, phi, theta)</dt><dd><tt>Converts&nbsp;angles&nbsp;into&nbsp;an&nbsp;appropriate&nbsp;rotation&nbsp;matrix.</tt></dd></dl>
+
+<dl><dt><a name="HexagonalCylindersPotential-set_angles"><strong>set_angles</strong></a>(self, eta=None, phi=None, theta=None)</dt><dd><tt>Update&nbsp;one&nbsp;or&nbsp;multiple&nbsp;angles.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>conversion_factor</strong> = 0.0001</dl>
+
+<dl><dt><strong>pargs</strong> = {'film_thickness': 100.0, 'rho1': 15.0, 'rho2': 10.0, 'rho_ambient': 0.0, 'rho_film': 10.0, 'rho_substrate': 20.1}</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NoisePotential">class <strong>NoisePotential</strong></a>(<a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Describes&nbsp;a&nbsp;film&nbsp;that&nbsp;has&nbsp;a&nbsp;random&nbsp;'noisy'&nbsp;makeup<br>
+with&nbsp;a&nbsp;characteristic&nbsp;length-scale.<br>
+&nbsp;<br>
+pargs&nbsp;should&nbsp;contain:<br>
+&nbsp;rho_ambient&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;ambient<br>
+&nbsp;rho_substrate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;density&nbsp;of&nbsp;substrate<br>
+&nbsp;rho1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max&nbsp;density&nbsp;in&nbsp;film<br>
+&nbsp;rho_film&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;min&nbsp;density&nbsp;in&nbsp;film<br>
+&nbsp;repeat_spacing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;characteristic&nbsp;length-scale&nbsp;of&nbsp;noise<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ScatterSim.Potentials.html#NoisePotential">NoisePotential</a></dd>
+<dd><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a></dd>
+<dd><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="NoisePotential-V_in_film"><strong>V_in_film</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;the&nbsp;potential&nbsp;in&nbsp;the&nbsp;thin&nbsp;film&nbsp;region&nbsp;(between<br>
+film&nbsp;surface&nbsp;and&nbsp;substrate&nbsp;interface).</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-__init__"><strong>__init__</strong></a>(self, pargs={}, method='cgkit')</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-to_string"><strong>to_string</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;string&nbsp;describing&nbsp;the&nbsp;potential.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>:<br>
+<dl><dt><a name="NoisePotential-V"><strong>V</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;potential.</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-rebuild"><strong>rebuild</strong></a>(self, pargs={})</dt><dd><tt>Allows&nbsp;a&nbsp;<a href="ScatterSim.BaseClasses.html#Potential">Potential</a>&nbsp;object&nbsp;to&nbsp;have&nbsp;its&nbsp;potential<br>
+arguments&nbsp;(pargs)&nbsp;updated.&nbsp;Note&nbsp;that&nbsp;this&nbsp;doesn't<br>
+replace&nbsp;the&nbsp;old&nbsp;pargs&nbsp;entirely.&nbsp;It&nbsp;only&nbsp;modifies&nbsp;<br>
+(or&nbsp;adds)&nbsp;the&nbsp;key/values&nbsp;provided&nbsp;by&nbsp;the&nbsp;new&nbsp;pargs.</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-rotate_coordinates"><strong>rotate_coordinates</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Transforms&nbsp;from&nbsp;box&nbsp;coordinates&nbsp;into&nbsp;lattice&nbsp;coordinates,&nbsp;based<br>
+on&nbsp;the&nbsp;pre-set&nbsp;rotation&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-rotation_elements"><strong>rotation_elements</strong></a>(self, eta, phi, theta)</dt><dd><tt>Converts&nbsp;angles&nbsp;into&nbsp;an&nbsp;appropriate&nbsp;rotation&nbsp;matrix.</tt></dd></dl>
+
+<dl><dt><a name="NoisePotential-set_angles"><strong>set_angles</strong></a>(self, eta=None, phi=None, theta=None)</dt><dd><tt>Update&nbsp;one&nbsp;or&nbsp;multiple&nbsp;angles.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>conversion_factor</strong> = 0.0001</dl>
+
+<dl><dt><strong>pargs</strong> = {'film_thickness': 100.0, 'rho1': 15.0, 'rho2': 10.0, 'rho_ambient': 0.0, 'rho_film': 10.0, 'rho_substrate': 20.1}</dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TestPotential">class <strong>TestPotential</strong></a>(<a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;generic&nbsp;thin-film&nbsp;potential.&nbsp;Useful&nbsp;for&nbsp;testing.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="ScatterSim.Potentials.html#TestPotential">TestPotential</a></dd>
+<dd><a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a></dd>
+<dd><a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Methods defined here:<br>
+<dl><dt><a name="TestPotential-V_in_film"><strong>V_in_film</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;the&nbsp;potential&nbsp;in&nbsp;the&nbsp;thin&nbsp;film&nbsp;region&nbsp;(between<br>
+film&nbsp;surface&nbsp;and&nbsp;substrate&nbsp;interface).</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-to_string"><strong>to_string</strong></a>(self)</dt><dd><tt>Returns&nbsp;a&nbsp;string&nbsp;describing&nbsp;the&nbsp;potential.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="ScatterSim.Potentials.html#FilmPotential">FilmPotential</a>:<br>
+<dl><dt><a name="TestPotential-V"><strong>V</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Returns&nbsp;potential.</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-__init__"><strong>__init__</strong></a>(self, pargs={})</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-rebuild"><strong>rebuild</strong></a>(self, pargs={})</dt><dd><tt>Allows&nbsp;a&nbsp;<a href="ScatterSim.BaseClasses.html#Potential">Potential</a>&nbsp;object&nbsp;to&nbsp;have&nbsp;its&nbsp;potential<br>
+arguments&nbsp;(pargs)&nbsp;updated.&nbsp;Note&nbsp;that&nbsp;this&nbsp;doesn't<br>
+replace&nbsp;the&nbsp;old&nbsp;pargs&nbsp;entirely.&nbsp;It&nbsp;only&nbsp;modifies&nbsp;<br>
+(or&nbsp;adds)&nbsp;the&nbsp;key/values&nbsp;provided&nbsp;by&nbsp;the&nbsp;new&nbsp;pargs.</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-rotate_coordinates"><strong>rotate_coordinates</strong></a>(self, in_x, in_y, in_z)</dt><dd><tt>Transforms&nbsp;from&nbsp;box&nbsp;coordinates&nbsp;into&nbsp;lattice&nbsp;coordinates,&nbsp;based<br>
+on&nbsp;the&nbsp;pre-set&nbsp;rotation&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-rotation_elements"><strong>rotation_elements</strong></a>(self, eta, phi, theta)</dt><dd><tt>Converts&nbsp;angles&nbsp;into&nbsp;an&nbsp;appropriate&nbsp;rotation&nbsp;matrix.</tt></dd></dl>
+
+<dl><dt><a name="TestPotential-set_angles"><strong>set_angles</strong></a>(self, eta=None, phi=None, theta=None)</dt><dd><tt>Update&nbsp;one&nbsp;or&nbsp;multiple&nbsp;angles.</tt></dd></dl>
+
+<hr>
+Data descriptors inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes inherited from <a href="ScatterSim.BaseClasses.html#Potential">ScatterSim.BaseClasses.Potential</a>:<br>
+<dl><dt><strong>conversion_factor</strong> = 0.0001</dl>
+
+<dl><dt><strong>pargs</strong> = {'film_thickness': 100.0, 'rho1': 15.0, 'rho2': 10.0, 'rho_ambient': 0.0, 'rho_film': 10.0, 'rho_substrate': 20.1}</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-asin"><strong>asin</strong></a>(...)</dt><dd><tt><a href="#-asin">asin</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;arc&nbsp;sine&nbsp;(measured&nbsp;in&nbsp;radians)&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-atan"><strong>atan</strong></a>(...)</dt><dd><tt><a href="#-atan">atan</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;arc&nbsp;tangent&nbsp;(measured&nbsp;in&nbsp;radians)&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-cexp"><strong>cexp</strong></a> = exp(z, /)</dt><dd><tt>Return&nbsp;the&nbsp;exponential&nbsp;value&nbsp;e**z.</tt></dd></dl>
+ <dl><dt><a name="-cos"><strong>cos</strong></a>(...)</dt><dd><tt><a href="#-cos">cos</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;cosine&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+ <dl><dt><a name="-csqrt"><strong>csqrt</strong></a> = sqrt(z, /)</dt><dd><tt>Return&nbsp;the&nbsp;square&nbsp;root&nbsp;of&nbsp;z.</tt></dd></dl>
+ <dl><dt><a name="-degrees"><strong>degrees</strong></a>(...)</dt><dd><tt><a href="#-degrees">degrees</a>(x)<br>
+&nbsp;<br>
+Convert&nbsp;angle&nbsp;x&nbsp;from&nbsp;radians&nbsp;to&nbsp;degrees.</tt></dd></dl>
+ <dl><dt><a name="-exp"><strong>exp</strong></a>(...)</dt><dd><tt><a href="#-exp">exp</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;e&nbsp;raised&nbsp;to&nbsp;the&nbsp;power&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-floor"><strong>floor</strong></a>(...)</dt><dd><tt><a href="#-floor">floor</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;floor&nbsp;of&nbsp;x&nbsp;as&nbsp;an&nbsp;int.<br>
+This&nbsp;is&nbsp;the&nbsp;largest&nbsp;integral&nbsp;value&nbsp;&lt;=&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-log"><strong>log</strong></a>(...)</dt><dd><tt><a href="#-log">log</a>(x[,&nbsp;base])<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;logarithm&nbsp;of&nbsp;x&nbsp;to&nbsp;the&nbsp;given&nbsp;base.<br>
+If&nbsp;the&nbsp;base&nbsp;not&nbsp;specified,&nbsp;returns&nbsp;the&nbsp;natural&nbsp;logarithm&nbsp;(base&nbsp;e)&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-radians"><strong>radians</strong></a>(...)</dt><dd><tt><a href="#-radians">radians</a>(x)<br>
+&nbsp;<br>
+Convert&nbsp;angle&nbsp;x&nbsp;from&nbsp;degrees&nbsp;to&nbsp;radians.</tt></dd></dl>
+ <dl><dt><a name="-sin"><strong>sin</strong></a>(...)</dt><dd><tt><a href="#-sin">sin</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;sine&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+ <dl><dt><a name="-sqrt"><strong>sqrt</strong></a>(...)</dt><dd><tt><a href="#-sqrt">sqrt</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;square&nbsp;root&nbsp;of&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-tan"><strong>tan</strong></a>(...)</dt><dd><tt><a href="#-tan">tan</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;tangent&nbsp;of&nbsp;x&nbsp;(measured&nbsp;in&nbsp;radians).</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>dimensions</strong> = ['x', 'y', 'z']<br>
+<strong>global_start_time</strong> = 1457404060.5315456<br>
+<strong>global_verbose</strong> = True<br>
+<strong>keV_to_Joule</strong> = 1.60217653e-16<br>
+<strong>pi</strong> = 3.141592653589793<br>
+<strong>verbose_depth</strong> = 4</td></tr></table>
+</body></html>
