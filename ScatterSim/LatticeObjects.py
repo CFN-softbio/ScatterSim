@@ -204,29 +204,18 @@ class Lattice:
         return summation
 
     def sum_over_hkl_array(self, q_list, peak, max_hkl=6):
-
+        ''' Sum the 1D powder curve over the q positions specified by the
+        symmetry. Still need to review to see if it can be optimized.
+        '''
         summation = np.zeros( (len(q_list)) )
-        # save objects in a list first, then grab them, then compute the values
-        # faster generally... this is crude but eventually we should be 
-        # able to improve it
-        # TODO : have not finished this yet, keeping old version uncommented
         hkl_info = self.iterate_over_hkl(max_hkl=max_hkl)
-        # expand
-        #hkl_info = np.array([h,k,l,m,f,qhkl, qvec[0], qvec[1], qvec[2] for
-        #                         h,k,l,m,f,qhkl,qvec in hkl_info])
-        #hkls = hkl_info[:,0:3]
-        #ms = hkl_info[:,3]
-        #fs = hkl_info[:,4]
-        #qhkls = hkl_info[:,5]
-        #qhkl_vecs = hkl_info[:,6:9]
-
 
         for h, k, l, m, f, qhkl, qhkl_vector in hkl_info:
 
             fs = self.sum_over_objects(qhkl_vector, h, k, l)
             term1 = fs*fs.conjugate()
             # Debye Waller factor
-            #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
+            term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
             term2 = self.G_q(qhkl_vector)
 
             summation += (m*(f**2)) * term1.real * term2 * peak.val_array( q_list, qhkl )
