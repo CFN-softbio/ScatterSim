@@ -57,6 +57,8 @@ class NanoObject:
         replace the old pargs entirely. It only modifies
         (or adds) the key/values provided by the new pargs."""
         self.pargs.update(pargs)
+        # also recompute the delta_rho
+        self.pargs['delta_rho'] = abs( self.pargs['rho_ambient'] - self.pargs['rho_object'] )
 
 
     def set_angles(self, eta=None, phi=None, theta=None):
@@ -550,10 +552,13 @@ class PolydisperseNanoObject(NanoObject):
         """Allows the object to have its potential
         arguments (pargs) updated. Note that this doesn't
         replace the old pargs entirely. It only modifies
-        (or adds) the key/values provided by the new pargs."""
-        self.pargs.update(pargs)
+        (or adds) the key/values provided by the new pargs.
 
-        self.distribution_list = []
+        For a polydisperse object, need to update pargs for elements in
+        distribution, omitting variable that's being modified.
+        """
+        self.pargs.update(pargs)
+        self.distribution_list = self.distribution(force=True)
 
 
     def distribution(self, spread=2.5, force=False):
@@ -604,11 +609,11 @@ class PolydisperseNanoObject(NanoObject):
 
     def V(self,rvec):
         """Returns the average potential"""
-        return self.dist_sum(rvec, 'V', float, True)
+        return self.dist_sum('V', rvec[0].shape, float, rvec)
 
     def volume(self):
         ''' ret avg volume'''
-        return self.dist_sum('volume', 1, float)
+        return self.dist_sum('volume', 1, float)[0]
 
 
 
@@ -653,7 +658,7 @@ class PolydisperseNanoObject(NanoObject):
         '''
             |<F>_d|^2
         '''
-        return self.dist_sum('form_factor', qvec[0].shape, complex, qvec)
+        return np.abs(self.dist_sum('form_factor', qvec[0].shape, complex, qvec))**2
 
     def form_factor_squared(self, qvec):
         """Returns the square of the form factor.
@@ -707,8 +712,6 @@ class PolydisperseNanoObject(NanoObject):
 
 # Next are NanoObjects
 
-
-# SphereNanoObject
 class SphereNanoObject(NanoObject):
     ''' This is as the name of object describes, a sphere.'''
     def __init__(self, pargs={}):
@@ -723,7 +726,7 @@ class SphereNanoObject(NanoObject):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates."""
 
-        rvec = self.map_rcoord(np.array([rvec]))
+        rvec = self.map_rcoord(np.array(rvec))
         R = self.pargs['radius']
         r = np.sqrt( rvec[0]**2 + rvec[1]**2 + rvec[2]**2 )
         return (r < R).astype(float)
@@ -733,6 +736,8 @@ class SphereNanoObject(NanoObject):
 
     def form_factor(self, qvec):
         ''' Compute the form factor of a sphere. '''
+        phase = self.get_phase(qvec)
+
         qx, qy, qz = qvec
         R = self.pargs['radius']
 
@@ -748,7 +753,7 @@ class SphereNanoObject(NanoObject):
         # numerically more stable than its equivalent:
         # 3*( np.sin(qR) - qR*np.cos(qR) )/( qR**3 )
 
-        F = self.pargs['delta_rho']*volume*3*spherical_jn(1,qR)/qR
+        F = self.pargs['delta_rho']*volume*3*spherical_jn(1,qR)/qR*phase
 
         return F
 

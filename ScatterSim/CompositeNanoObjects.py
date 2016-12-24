@@ -1,5 +1,6 @@
 from ScatterSim.NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject
 import numpy as np
+from copy import deepcopy
 # This file is where more complex nano objects can be stored
 # These interface the same way as NanoObjects but since they're a little more complex 
 # it makes sense to separate them from NanoObjects
@@ -31,14 +32,20 @@ class CompositeNanoObject(NanoObject):
         self.nano_objects = list()
 
         if parglist is None:
-            self.nano_objects = objlist
+            for obj in objlist:
+                # just in case list has repeating object
+                # make a deepcopy
+                self.nano_objects.append(deepcopy(obj))
         else:
             for nobj, pargobj in zip(objlist, parglist):
-                if 'sign' not in pargobj:
-                    # defaults to additive
-                    pargobj['sign'] = 1.
 
                 self.nano_objects.append(nobj(pargs=pargobj))
+
+        # set defaults
+        for obj in self.nano_objects:
+            if 'sign' not in obj.pargs:
+                # defaults to additive
+                obj.pargs['sign'] = 1.
 
     def form_factor(self, qvector):
         """Returns the complex-amplitude of the form factor at the given
@@ -50,7 +57,7 @@ class CompositeNanoObject(NanoObject):
         phase = self.get_phase(qvector)
 
         # first rotate just as for V
-        qvec = self.map_qcoord(qvector)
+        qvector = self.map_qcoord(qvector)
 
         F = np.zeros_like(qvector[0],dtype=complex)
         for nobj in self.nano_objects:
@@ -178,16 +185,29 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
             edgesep : separation of element from edge
             rest of pargs are used for the cylinder object
                 ex : radius, height
+            linkerlength : if specified, adds linkers of specified length,
+                centered in between the octahedra
+            linkerradius : if linkerlength specified, will add linkers of this radius
+            rho_linker : if linkerlength specified, adds linkers of this density
+                (defaults to same density as cylinders in octahedra)
+            linkerobject : the object to use for the linkers (defaults to baseObject)
     """
-    def __init__(self, baseObject=None, pargs={}, seed=None):
+    def __init__(self, baseObject=None, linkerObject=None, pargs={}, seed=None):
         if baseObject is None:
             baseObject = CylinderNanoObject
+        if linkerObject is None:
+            linkerObject = baseObject
 
         # Set defaults
         if 'edgeshift' not in pargs:
             pargs['edgeshift'] = 0.0
         if 'edgespread' not in pargs:
             pargs['edgespread'] = 0.0
+        if 'linkerlength' in pargs:
+            addlinkers = True
+        else:
+            addlinkers = False
+
         # raise errors for undefined parameters
         if 'edgelength' not in pargs:
             raise ValueError("Need to specify an edgelength for this object")
@@ -199,11 +219,13 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
             'CYZ1', 'CXZ1', 'CYZ2', 'CXZ2',
             'CXY1', 'CXY4', 'CXY3', 'CXY2',
             'CYZ3', 'CXZ3', 'CYZ4', 'CXZ4',
+            'linker1', 'linker2', 'linker3', 'linker4',
+            'linker5', 'linker6',
         ]
 
         # you flip x or y from original shifts to move along edge axis
         # not a good explanation but some sort of personal bookkeeping for now...
-        shiftfacs = np.array([
+        shiftfacs = [
             # top 
             [0,-1,1],
             [-1,0,1],
@@ -219,7 +241,7 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
             [1, 0, -1],
             [0,-1, -1],
             [-1,0,-1]
-        ])
+        ]
 
         for lbl1 in shiftlabels:
             if lbl1 not in pargs:
@@ -227,8 +249,12 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
 
         # calculate shift of COM from edgelength and edgespread
         fac1 = np.sqrt(2)/2.*((.5*pargs['edgelength']) + pargs['edgespread'])
+        eL = pargs['edgelength']
+        if addlinkers:
+            sL = pargs['linkerlength']
 
-        poslist = np.array([
+
+        poslist = [
         # eta, theta, phi, x0, y0, z0
         # top part
         [0, 45, -90, 0, fac1, fac1],
@@ -245,7 +271,33 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
         [0, 45, 0, -fac1, 0, -fac1],
         [0, 45, 90, 0, fac1, -fac1],
         [0, -45, 0, fac1, 0, -fac1],
-        ])
+        ]
+
+        if addlinkers:
+            poslist_linker = [
+                # linkers
+                [0, 0, 0, 0, 0, eL/np.sqrt(2) + sL/2.],
+                [0, 0, 0, 0, 0, -eL/np.sqrt(2) - sL/2.],
+                [0, 90, 0, eL/np.sqrt(2) + sL/2.,0,0],
+                [0, 90, 0, -eL/np.sqrt(2) - sL/2.,0,0],
+                [0, 90, 90, 0, eL/np.sqrt(2) + sL/2., 0],
+                [0, 90, 90, 0, -eL/np.sqrt(2) - sL/2., 0],
+            ]
+            for row in poslist_linker:
+                poslist.append(row)
+            shiftfacs_linker = [
+                    [0,0,1],
+                    [0,0,-1],
+                    [1,0,0],
+                    [-1,0,0],
+                    [0,1,0],
+                    [0,-1,0],
+            ]
+            for row in shiftfacs_linker:
+                shiftfacs.append(row)
+
+        poslist = np.array(poslist)
+        shiftfacs = np.array(shiftfacs)
 
         # now add the shift factors
         for i in range(len(poslist)):
@@ -255,7 +307,7 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
         # need to create objslist and pargslist
         objlist = list()
         pargslist = list()
-        for pos  in poslist:
+        for i, pos  in enumerate(poslist):
             objlist.append(baseObject)
 
             eta, phi, theta, x0, y0, z0 = pos
@@ -268,6 +320,15 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
             pargstmp['y0'] = y0
             pargstmp['z0'] = z0
 
+            labeltmp = shiftlabels[i]
+            if 'linker' in labeltmp:
+                if 'rho_linker' in pargs:
+                    pargstmp['rho_object'] = pargs['rho_linker']
+                if 'linkerlength' in pargs:
+                    pargstmp['height'] = pargs['linkerlength']
+                if 'linkerradius' in pargs:
+                    pargstmp['radius'] = pargs['linkerradius']
+
             pargslist.append(pargstmp)
 
-        super(OctahedronCylindersNanoObject, self).__init__(objlist, pargslist, pargs)
+        super(OctahedronCylindersNanoObject, self).__init__(objlist, pargslist, pargs=pargs)

@@ -2,7 +2,59 @@ from ScatterSim.CompositeNanoObjects import CompositeNanoObject
 from copy import deepcopy
 import numpy as np
 
-# Lattice
+''' This code is for the Lattice types
+    First the parent Lattice class is defined.
+
+    Parameters
+    ---------
+    lattice_spacing_a : the lattice spacing of first unit vector
+    lattice_spacing_b : the lattice spacing of first unit vector
+    lattice_spacing_c : the lattice spacing of first unit vector
+    alpha, beta, gamma : the angles of the vectors
+    lattice_coordinates : these are the coordinates of all the elements in the lattice
+    lattice_types : a list of integer identifiers for each vector (in
+        lattice_coordinates). They can be any number, so long as each number identifies one class.
+        For example, for zincblende (DiamondTwoParticleLattice), they are defined as:
+            [1,1,1,1,2,2,2,2]
+            where 1 refers to the first element and 2 to the second.
+
+
+Finally, as an example, here is the definition of the FCC lattice:
+        # Define the lattice
+        symmetry = {
+            'crystal family' : 'cubic',
+            'crystal system' : 'cubic',
+            'Bravais lattice' : 'P',
+            'crystal class' : 'hexoctahedral',
+            'point group' : 'm3m',
+            'space group' : 'Pm3m',
+        }
+
+        positions = ['cornerFCC', 'tetrahedralFCC']
+        lattice_positions = ['corner', 'faceXY', 'faceYZ', 'faceXZ', 'tetra1', 'tetra2', 'tetra3', 'tetra4']
+
+
+        lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                        (0.5, 0.5, 0.0), \
+                                        (0.0, 0.5, 0.5), \
+                                        (0.5, 0.0, 0.5), \
+                                        (0.25, 0.25, 0.25), \
+                                        (0.25, 0.75, 0.75), \
+                                        (0.75, 0.25, 0.75), \
+                                        (0.75, 0.75, 0.25), \
+                                    ]
+        lattice_types = [1,1,1,1,2,2,2,2]
+
+        super(DiamondTwoParticleLattice, self).__init__(objects, lattice_spacing_a=lattice_spacing_a,
+                                         sigma_D=sigma_D, symmetry=symmetry,
+                                         lattice_positions=lattice_positions,
+                                         lattice_coordinates=lattice_coordinates,
+                                        lattice_types=lattice_types)
+
+
+
+'''
+
 class Lattice:
     """Defines a lattice type and provides methods for adding objects to the
     lattice. This is the starting point of all the crystalline samples.  It is
@@ -12,11 +64,13 @@ class Lattice:
     to work.
 
     sigma_D : the DW factor. Can be one number or a two tuple:
-            (unit normal, DW factor) pair
+            (unit normal, DW factor) pair. The latter is for more complex anisotropic
+            DW factors.
     """
     def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None,
                  lattice_spacing_c=None, alpha=90, beta=None, gamma=None,
-                 sigma_D=0.01, lattice_positions=None, lattice_coordinates=None, symmetry=None):
+                 sigma_D=0.01, lattice_positions=None, lattice_coordinates=None, symmetry=None,
+                lattice_types=None):
         ''' Initialize Lattice object.
                 objects : list of NanoObjects
         '''
@@ -53,6 +107,8 @@ class Lattice:
             lattice_positions = ['center']
         if lattice_coordinates is None:
             lattice_coordinates = np.array([[0,0,0]])
+        if lattice_types is None:
+            lattice_types = np.ones(len(lattice_coordinates))
         if symmetry is None:
             symmetry = {
                     'crystal family' : 'N/A',
@@ -68,7 +124,13 @@ class Lattice:
         self.symmetry = symmetry
         self.lattice_positions = lattice_positions
         self.lattice_coordinates = lattice_coordinates
-        self.number_objects = len(self.lattice_coordinates)
+        self.lattice_types = lattice_types
+        # number_types is number of *unique* objects
+        self.number_types = len(np.unique(lattice_types))
+        # number_objects is total number objects
+        self.number_objects = len(lattice_types)
+
+        unique_types = np.unique(lattice_types)
 
         # finally make objects
         self.lattice_objects = list()
@@ -77,19 +139,25 @@ class Lattice:
             obj = objects[0]
             for i in range(self.number_objects):
                 self.lattice_objects.append(deepcopy(obj))
-        elif len(objects) == self.number_objects:
+        elif len(objects) == self.number_types:
+            # right now assumes all types are ordered, should fix for unordered later
+            for i, typ in enumerate(unique_types):
+                w = np.where(self.lattice_types == typ)[0]
+                if len(w) > 0:
+                    for k in range(len(w)):
+                        self.lattice_objects.append(deepcopy(objects[i]))
             # move objects into list
-            self.lattice_objects = objects
         else:
             raise ValueError("Can only handle one or {} " +
-                             "objects".format(self.number_objects) +
-                             ", but received {}".format(len(objects))
+                             "objects".format(self.number_types) +
+                             ", but received {}.".format(len(objects))
                              )
 
         # now update the positions
         for i in range(len(self.lattice_objects)):
             pos = self.lattice_coordinates[i]*self.lattice_spacings
             self.lattice_objects[i].set_origin(*pos)
+            self.lattice_objects[i].rebuild()
 
 
 
@@ -200,25 +268,6 @@ class Lattice:
             term3 = peak( q-qhkl )
 
             summation += (m*(f**2)) * term1 * term2 * term3
-
-        return summation
-
-    def sum_over_hkl_array(self, q_list, peak, max_hkl=6):
-        ''' Sum the 1D powder curve over the q positions specified by the
-        symmetry. Still need to review to see if it can be optimized.
-        '''
-        summation = np.zeros( (len(q_list)) )
-        hkl_info = self.iterate_over_hkl(max_hkl=max_hkl)
-
-        for h, k, l, m, f, qhkl, qhkl_vector in hkl_info:
-
-            fs = self.sum_over_objects(qhkl_vector, h, k, l)
-            term1 = fs*fs.conjugate()
-            # Debye Waller factor
-            term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
-            term2 = self.G_q(qhkl_vector)
-
-            summation += (m*(f**2)) * term1.real * term2 * peak.val_array( q_list, qhkl )
 
         return summation
 
@@ -340,7 +389,7 @@ class Lattice:
 
 # Different Lattices
 
-# SimpleCubic Lattice
+# TODO : The next three should inherit a SimpleCubic lattice
 class SimpleCubic(Lattice):
     def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
         # prepare variables of lattice
@@ -355,9 +404,7 @@ class SimpleCubic(Lattice):
 
         lattice_positions = ['corner']
 
-
-        lattice_coordinates = [ (0.0, 0.0, 0.0), \
-                                    ]
+        lattice_coordinates = [ (0.0, 0.0, 0.0)]
 
         # now call parent function to initialize
         super(SimpleCubic, self).__init__(objects, lattice_spacing_a=lattice_spacing_a, sigma_D=sigma_D,
@@ -366,9 +413,179 @@ class SimpleCubic(Lattice):
 
     def symmetry_factor(self, h, k, l):
         """Returns the symmetry factor (0 for forbidden)."""
-
         return 1
 
     def unit_cell_volume(self):
+        return self.lattice_spacing_a**3
 
+class BCCLattice(Lattice):
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+        # Define the lattice
+        symmetry = {
+            'crystal family' :  'cubic',
+            'crystal system' :  'cubic',
+            'Bravais lattice' :  'I',
+            'crystal class' :  'hexoctahedral',
+            'point group' :  'm3m',
+            'space group' :  'Im3m',
+        }
+
+        lattice_coordinates = np.array([ (0.0, 0.0, 0.0), \
+                                        (0.5, 0.5, 0.5), \
+                                    ])
+        lattice_types = [1,1]
+        positions = ['all']
+        lattice_positions = ['corner', 'center']
+
+
+        super(BCCLattice, self).__init__(objects, lattice_spacing_a=lattice_spacing_a,
+                                         sigma_D=sigma_D, symmetry=symmetry,
+                                         lattice_positions=lattice_positions,
+                                         lattice_coordinates=lattice_coordinates,
+                                        lattice_types=lattice_types)
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+        return 1
+        if (h+k+l)%2==0:
+            return 2
+        else:
+            return 0
+
+    def unit_cell_volume(self):
+        return self.lattice_spacing_a**3
+
+    def q_hkl(self, h, k, l):
+        """Determines the position in reciprocal space for the given reflection."""
+
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl_vector = np.array([ prefactor*h, \
+                        prefactor*k, \
+                        prefactor*l ])
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+
+        return (qhkl, qhkl_vector)
+
+    def q_hkl_length(self, h, k, l):
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl = prefactor*np.sqrt( h**2 + k**2 + l**2 )
+
+        return qhkl
+
+class FCCLattice(Lattice):
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+        # Define the lattice
+        symmetry = {}
+        symmetry['crystal family'] = 'cubic'
+        symmetry['crystal system'] = 'cubic'
+        symmetry['Bravais lattice'] = 'F'
+        symmetry['crystal class'] = 'hexoctahedral'
+        symmetry['point group'] = 'm3m'
+        symmetry['space group'] = 'Fm3m'
+
+
+        positions = ['all']
+        lattice_positions = ['corner', 'faceXY', 'faceYZ', 'faceXZ']
+
+        lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                        (0.5, 0.5, 0.0), \
+                                        (0.0, 0.5, 0.5), \
+                                        (0.5, 0.0, 0.5), \
+                                        ]
+        lattice_types = [1,1,1,1]
+
+        super(FCCLattice, self).__init__(objects, lattice_spacing_a=lattice_spacing_a,
+                                         sigma_D=sigma_D, symmetry=symmetry,
+                                         lattice_positions=lattice_positions,
+                                         lattice_coordinates=lattice_coordinates,
+                                        lattice_types=lattice_types)
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+        return 1
+        #if (h%2==0) and (k%2==0) and (l%2==0):
+            ## All even
+            #return 4
+        #elif (h%2==1) and (k%2==1) and (l%2==1):
+            ## All odd
+            #return 4
+        #else:
+            #return 0
+
+    def q_hkl(self, h, k, l):
+        """Determines the position in reciprocal space for the given reflection."""
+
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl_vector = np.array([ prefactor*h, \
+                        prefactor*k, \
+                        prefactor*l ])
+        qhkl = np.sqrt( qhkl_vector[0]**2 + qhkl_vector[1]**2 + qhkl_vector[2]**2 )
+
+        return (qhkl, qhkl_vector)
+
+    def q_hkl_length(self, h, k, l):
+        prefactor = (2*np.pi/self.lattice_spacing_a)
+        qhkl = prefactor*np.sqrt( h**2 + k**2 + l**2 )
+
+        return qhkl
+
+    def unit_cell_volume(self):
+
+        return self.lattice_spacing_a**3
+
+class DiamondTwoParticleLattice(Lattice):
+    # a.k.a. zincblende
+    '''
+        These are implied:
+            lattice_spacing_b = lattice_spacing_a
+            lattice_spacing_c = lattice_spacing_a
+            alpha = radians(90)
+            beta = radians(90)
+            gamma = radians(90)
+
+    '''
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+        lattice_spacing_a = lattice_spacing_a
+
+        sigma_D = np.array(sigma_D)          # Lattice disorder
+
+        # Define the lattice
+        symmetry = {
+            'crystal family' : 'cubic',
+            'crystal system' : 'cubic',
+            'Bravais lattice' : 'P',
+            'crystal class' : 'hexoctahedral',
+            'point group' : 'm3m',
+            'space group' : 'Pm3m',
+        }
+
+        positions = ['cornerFCC', 'tetrahedralFCC']
+        lattice_positions = ['corner', 'faceXY', 'faceYZ', 'faceXZ', 'tetra1', 'tetra2', 'tetra3', 'tetra4']
+
+
+        lattice_coordinates = [ (0.0, 0.0, 0.0), \
+                                        (0.5, 0.5, 0.0), \
+                                        (0.0, 0.5, 0.5), \
+                                        (0.5, 0.0, 0.5), \
+                                        (0.25, 0.25, 0.25), \
+                                        (0.25, 0.75, 0.75), \
+                                        (0.75, 0.25, 0.75), \
+                                        (0.75, 0.75, 0.25), \
+                                    ]
+
+        lattice_types = [1,1,1,1,2,2,2,2]
+
+        super(DiamondTwoParticleLattice, self).__init__(objects, lattice_spacing_a=lattice_spacing_a,
+                                         sigma_D=sigma_D, symmetry=symmetry,
+                                         lattice_positions=lattice_positions,
+                                         lattice_coordinates=lattice_coordinates,
+                                        lattice_types=lattice_types)
+
+
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+        return 1
+
+    def unit_cell_volume(self):
         return self.lattice_spacing_a**3
