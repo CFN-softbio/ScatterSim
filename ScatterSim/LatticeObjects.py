@@ -264,7 +264,7 @@ class Lattice:
             term1 = (fs*fs.conjugate()).real
             # if 
             #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
-            term2 = self.G_q(qhkl_vector)
+            term2 = self.G_q(qhkl_vector[0], qhkl_vector[1], qhkl_vector[2])
             term3 = peak( q-qhkl )
 
             summation += (m*(f**2)) * term1 * term2 * term3
@@ -294,23 +294,31 @@ class Lattice:
         """Returns the sum of the form factor of particles in the unit cell."""
         return self.sum_over_objects('V', rvec[0].shape, float, rvec)
 
-    def G_q(self,q):
+    def G_q(self,qx,qy=None,qz=None):
         ''' the G(q) from the Debye-Waller factor.
             If sigma_D is a two tuple, then compute the DW factor per unit
             normal.
-            q must be a 3-vector
+            if qy and qz none, qx treated as magnitude.
 
             Note : normalized to lattice_spacing for now for backwards compatibility
             so sigma = 1/(2sd ld)
         '''
+        # just 1D Debye Waller
         if self.sigma_D.ndim == 0:
-            res = np.exp( -(self.sigma_D**2) * (np.linalg.norm(q)**2 * self.lattice_spacing_a**2) )
+            if qy is not None:
+                qnorm = np.sqrt(qx**2 + qy**2 + qz**2)
+            else:
+                qnorm = qx
+            res = np.exp( -(self.sigma_D**2) * ((qnorm)**2 * self.lattice_spacing_a**2) )
         else:
+            # q must be 3 vector
+            if qy == None:
+                raise ValueError("Error: if DW factor is anisotropic, need to supply qy and qz")
             res = 1.
             for sd, unrmx, unrmy, unrmz in self.sigma_D:
                 # need to fix later, should be array form
                 u = np.array([unrmx,unrmy, unrmz])
-                res *= np.exp( -(sd**2) * (np.dot(q,u)**2) * (self.lattice_spacing_a**2) )
+                res *= np.exp( -(sd**2) * (np.tensordot(np.array([qx,qy,qz]),u,axes=(0,0))**2) * (self.lattice_spacing_a**2) )
         return res
 
 
@@ -391,7 +399,8 @@ class Lattice:
 
 # TODO : The next three should inherit a SimpleCubic lattice
 class SimpleCubic(Lattice):
-    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01, lattice_coordinates=None,
+                 lattice_types=None):
         # prepare variables of lattice
         symmetry = {
             'crystal family' : 'cubic',
@@ -404,12 +413,13 @@ class SimpleCubic(Lattice):
 
         lattice_positions = ['corner']
 
-        lattice_coordinates = [ (0.0, 0.0, 0.0)]
+        if lattice_coordinates is None:
+            lattice_coordinates = [ (0.0, 0.0, 0.0)]*len(objects)
 
         # now call parent function to initialize
         super(SimpleCubic, self).__init__(objects, lattice_spacing_a=lattice_spacing_a, sigma_D=sigma_D,
                 alpha=90, beta=90, gamma=90, symmetry=symmetry, lattice_positions=lattice_positions,
-                lattice_coordinates=lattice_coordinates)
+                lattice_coordinates=lattice_coordinates, lattice_types=lattice_types)
 
     def symmetry_factor(self, h, k, l):
         """Returns the symmetry factor (0 for forbidden)."""

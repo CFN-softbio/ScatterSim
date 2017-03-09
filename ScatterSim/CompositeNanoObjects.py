@@ -1,4 +1,4 @@
-from ScatterSim.NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject
+from ScatterSim.NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject, SphereNanoObject
 import numpy as np
 from copy import deepcopy
 # This file is where more complex nano objects can be stored
@@ -332,3 +332,103 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
             pargslist.append(pargstmp)
 
         super(OctahedronCylindersNanoObject, self).__init__(objlist, pargslist, pargs=pargs)
+
+# CubicCylindersNanoObject
+class CubicCylindersNanoObject(CompositeNanoObject):
+    """ A cylinder nano object aligned along axes, meant for cubic structure.
+    """
+    def __init__(self, baseObject=None, linkerObject=None, pargs={}, seed=None):
+        if baseObject is None:
+            baseObject = CylinderNanoObject
+        if linkerObject is None:
+            linkerObject = baseObject
+
+        # raise errors for undefined parameters
+        if 'height' not in pargs:
+            raise ValueError("Need to specify a height for this object")
+        if 'radius' not in pargs:
+            raise ValueError("Need to specify a radius for this object")
+
+        eL = pargs['height']
+
+        poslist = [
+        # eta, theta, phi, x0, y0, z0
+        # top part
+        [0, 0, 0, 0, 0, eL/2.],
+        [0, 90, 0, eL/2.,0, 0],
+        [0, 90, 90, 0, eL/2., 0],
+        ]
+
+        # need to create objslist and pargslist
+        objlist = list()
+        pargslist = list()
+        for i, pos  in enumerate(poslist):
+            objlist.append(baseObject)
+
+            eta, phi, theta, x0, y0, z0 = pos
+            pargstmp = dict()
+            pargstmp.update(pargs)
+            pargstmp['eta'] = eta
+            pargstmp['theta'] = theta
+            pargstmp['phi'] = phi
+            pargstmp['x0'] = x0
+            pargstmp['y0'] = y0
+            pargstmp['z0'] = z0
+
+            pargslist.append(pargstmp)
+
+        super(CubicCylindersNanoObject, self).__init__(objlist, pargslist, pargs=pargs)
+
+class CoreShellNanoObject(CompositeNanoObject):
+    ''' A core shell nano object.
+        This is a composite nanoobject.
+
+        pargs:
+            radius_inner : inner radius
+            rho_object_inner : inner density
+            radius_outer : outer radius
+            rho_object_outer : outer density
+            rho_ambient : the ambient density (solvent)
+
+            Note : all rho's must be *positive*
+    '''
+    def __init__(self, pargs={}):
+        objslist = list()
+        pargslist = list()
+
+        objslist = [SphereNanoObject, SphereNanoObject]
+
+        # the inner part is inner-outer (to compensate for outer sphere)
+        density_diff = pargs['rho_object_inner'] - pargs['rho_object_outer']
+        if density_diff < 0:
+            sign_inner =-1
+        else:
+            sign_inner = 1
+        # abs val matters only, even when comparing with solvent, rho_ambient
+        density_diff = np.abs(density_diff)
+
+        # check for arguments
+        if 'rho_object_inner' not in pargs or\
+            'radius_inner' not in pargs or\
+            'rho_object_outer' not in pargs or\
+            'radius_outer' not in pargs or\
+            'rho_ambient' not in pargs:
+            raise ValueError("Missing args, please check correct syntax")
+
+        pargs_inner = {
+                'radius' : pargs['radius_inner'],
+                'rho_object_inner' : density_diff,
+                'rho_ambient' : pargs['rho_ambient'],
+                'sign' : sign_inner
+                }
+
+        pargs_outer = {
+                'radius' : pargs['radius_outer'],
+                'rho_object_outer' : pargs['rho_object_outer'],
+                'rho_ambient' : pargs['rho_ambient'],
+                'sign' : 1
+                }
+
+        pargslist = [pargs_inner, pargs_outer]
+
+        super(CoreShellNanoObject, self).__init__(objslist, pargslist, pargs=pargs)
