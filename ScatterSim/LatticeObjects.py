@@ -125,6 +125,11 @@ class Lattice:
         self.lattice_positions = lattice_positions
         self.lattice_coordinates = lattice_coordinates
         self.lattice_types = lattice_types
+        order = np.argsort(self.lattice_types)
+        # re-order types
+        self.lattice_types = np.array(self.lattice_types)[order]
+        self.lattice_coordinates = np.array(self.lattice_coordinates)[order]
+        self.lattice_positions = np.array(self.lattice_positions)[order]
         # number_types is number of *unique* objects
         self.number_types = len(np.unique(lattice_types))
         # number_objects is total number objects
@@ -140,7 +145,7 @@ class Lattice:
             for i in range(self.number_objects):
                 self.lattice_objects.append(deepcopy(obj))
         elif len(objects) == self.number_types:
-            # right now assumes all types are ordered, should fix for unordered later
+            # TODO : right now assumes all types are ordered, should fix for unordered later
             for i, typ in enumerate(unique_types):
                 w = np.where(self.lattice_types == typ)[0]
                 if len(w) > 0:
@@ -410,11 +415,14 @@ class SimpleCubic(Lattice):
             'point group' : 'm3m',
             'space group' : 'Pm3m',
         }
-
-        lattice_positions = ['corner']
+        if not isinstance(objects, list):
+            objects = [objects]
+ 
+        lattice_positions = ['placement']*len(objects)
 
         if lattice_coordinates is None:
-            lattice_coordinates = [ (0.0, 0.0, 0.0)]*len(objects)
+            lattice_coordinates = [(0.0, 0.0, 0.0)]*len(objects)
+        lattice_types = list(range(len(objects)))
 
         # now call parent function to initialize
         super(SimpleCubic, self).__init__(objects, lattice_spacing_a=lattice_spacing_a, sigma_D=sigma_D,
@@ -430,6 +438,7 @@ class SimpleCubic(Lattice):
 
 class BCCLattice(Lattice):
     def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01):
+        ''' cannot specify lattice_types or lattice_coordinates'''
         # Define the lattice
         symmetry = {
             'crystal family' :  'cubic',
@@ -592,6 +601,64 @@ class DiamondTwoParticleLattice(Lattice):
                                         lattice_types=lattice_types)
 
 
+
+    def symmetry_factor(self, h, k, l):
+        """Returns the symmetry factor (0 for forbidden)."""
+        return 1
+
+    def unit_cell_volume(self):
+        return self.lattice_spacing_a**3
+
+class RandomizedSimpleCubicLattice(Lattice):
+    def __init__(self, objects, lattice_spacing_a=1.0, sigma_D=0.01,
+                 filling_probs=None, lattice_coordinates=None,
+                 lattice_types=None, n_repeat=3):
+        ''' This is an extended lattice where we randomize the filling.
+            objects : the NanoObjects (or composite) to place in lattice
+            lattice_spacing_a/b/c : the a/b/c lattice spacings
+        '''
+        if filling_probs is None:
+            self.filling_probs = np.ones(len(objects))
+
+        # prepare variables of lattice
+        symmetry = {
+            'crystal family' : 'cubic',
+            'crystal system' : 'cubic',
+            'Bravais lattice' : 'P',
+            'crystal class' : 'hexoctahedral',
+            'point group' : 'm3m',
+            'space group' : 'Pm3m',
+        }
+
+        lattice_positions = ['corner']*len(objects) # not used
+
+        if lattice_coordinates is None:
+            lattice_coordinates = [ (0.0, 0.0, 0.0)]*len(objects)
+        sub_lattice_coordinates = lattice_coordinates
+
+        lattice_coordinates = list()
+        lattice_types = list()
+        lattice_positions = list()
+        # now prepare the elements
+        for i in range(n_repeat):
+            x = i/n_repeat
+            for j in range(n_repeat):
+                y = j/n_repeat
+                for k in range(n_repeat):
+                    z = k/n_repeat
+                    for l, coord in enumerate(sub_lattice_coordinates):
+                        xsub, ysub, zsub = x+coord[0], y+coord[1], z+coord[2]
+                        if np.random.uniform() <= filling_probs[l]:
+                            lattice_coordinates.append((xsub, ysub, zsub))
+                            lattice_types.append(l)
+                            lattice_positions.append("N/A")
+
+        lattice_spacing_a = n_repeat*lattice_spacing_a
+
+        # now call parent function to initialize
+        super(RandomizedSimpleCubicLattice, self).__init__(objects, lattice_spacing_a=lattice_spacing_a, sigma_D=sigma_D,
+                alpha=90, beta=90, gamma=90, symmetry=symmetry, lattice_positions=lattice_positions,
+                lattice_coordinates=lattice_coordinates, lattice_types=lattice_types)
 
     def symmetry_factor(self, h, k, l):
         """Returns the symmetry factor (0 for forbidden)."""
