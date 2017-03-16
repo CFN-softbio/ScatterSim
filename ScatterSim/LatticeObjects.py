@@ -348,7 +348,7 @@ class Lattice:
     def structure_factor_isotropic(self, q, peak, c=1.0, background=None, max_hkl=6):
         """Returns the structure factor S(q) for the specified q-position."""
 
-        P = self.form_factor_intensity_isotropic(q)
+        P = self.form_factor_squared_isotropic(q)
 
         S = (c/(q**2 * P))*self.sum_over_hkl(q, peak, max_hkl=max_hkl)
 

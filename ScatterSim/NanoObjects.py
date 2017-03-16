@@ -729,7 +729,7 @@ class SphereNanoObject(NanoObject):
         rvec = self.map_rcoord(np.array(rvec))
         R = self.pargs['radius']
         r = np.sqrt( rvec[0]**2 + rvec[1]**2 + rvec[2]**2 )
-        return (r < R).astype(float)
+        return (r < R).astype(float)*self.pargs['delta_rho']
 
     def volume(self):
         return 4/3.*np.pi*self.pargs['radius']**3
