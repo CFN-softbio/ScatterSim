@@ -1,14 +1,5 @@
 This library is meant to compute the expected scattering from crystalline meso-sctructures.
 
-For documentation:
-1. 'qvector' will signify an array as such : np.array([qx, qy, qz])
-        I may forget to document its meaning across all functions
-2. ``` python
-    pargs['orientation_spread'] = phi_start, phi_end, theta_start, theta_end
-```
-3. rebuild function meant to reset everything. Run this when need to reset
-        (don't have to specify pargs)
-
 Acknowledgements
 
 Created: March 8th, 2013 (original code)
