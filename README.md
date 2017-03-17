@@ -1,4 +1,7 @@
-This library is meant to compute the expected scattering from crystalline meso-sctructures.
+This library allows the prediction/simulation of the one-dimensional (circular
+average) x-ray scattering curves for nanoscale superlattices (i.e. crystalline
+nano/meso-structures). The code can also be used to fit experimental data (I(q)
+or S(q)).
 
 Acknowledgements
 
