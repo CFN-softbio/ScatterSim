@@ -503,6 +503,53 @@ class NanoObject:
         """
         raise NotImplementedError("This needs to be implemented by the inherting object")
 
+    def projections(self, length, npoints=100):
+        ''' Compute the xy, yz, and xz projections (in that order).
+
+            This is a convenience routine to allow one to see approximately
+            what the nano object looks like. Useful when creating new composite
+            nano objects.
+
+            Parameters
+            ----------
+
+            length : length of the box to compute the projections.
+                Will compute a 3D box of [-length, +length] in x, y and z
+
+            npoints : the number of points to calculate per dimension
+                default 100
+                WARNING : This creates a npoints x npoints x npoints array
+
+            Returns
+            -------
+
+            V_xy : the xy projection
+            V_xz : the xz projection
+            V_yz : the xz projection
+
+            Notes
+            -----
+            To compute the projection, this function must first compute a 3D
+            density field of the object, and add various projections.  This
+            code can become very slow and memory intensive if npoints is too
+            large.
+
+            It also is strongly reliant on how well Obj.V() was coded.  When
+            adding new NanoObjects, be careful to program in the Obj.V()
+            function properly.
+            This is a great tool for CompositeNanoObjects
+        '''
+        x = np.linspace(-length, length, npoints)
+        # ij indexing means that we index in V[x,y,z]
+        # Note that rightermost index is fastest varying index
+        x, y, z = np.meshgrid(x,x,x,indexing='ij')
+        V = self.V(np.array([x,y,z]))
+        V_xy = np.sum(V,axis=2).T
+        V_xz = np.sum(V,axis=1).T
+        V_yz = np.sum(V,axis=0).T
+
+        return V_xy, V_xz, V_yz
+
 # Variations of NanoObjects
 # PolydisperseNanoObject
 class PolydisperseNanoObject(NanoObject):
