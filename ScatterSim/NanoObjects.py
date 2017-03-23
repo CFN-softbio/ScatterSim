@@ -619,11 +619,13 @@ class PolydisperseNanoObject(NanoObject):
             argname = self.argname
             argstdname = self.argstdname
             # Build the distribution
-            r = self.pargs[argname]
-            rstd = self.pargs[argstdname]
+            mean_val = self.pargs[argname]
+            rms_val = self.pargs[argstdname]
             n = self.pargs['distribution_num_points']
             if self.pargs['distribution_type'] == 'gaussian':
-                self.distribution_list = self.distribution_gaussian(r, rstd, n, spread=spread)
+                self.distribution_list = \
+                    self.distribution_gaussian(mean=mean_val, rms=rms_val,
+                                               num_points=n, spread=spread)
             else:
                 print( "Unknown distribution type in distribution()." )
 
@@ -631,25 +633,34 @@ class PolydisperseNanoObject(NanoObject):
         return self.distribution_list
 
 
-    def distribution_gaussian(self, radius=1.0, sigma=0.01, num_points=11, spread=2.5):
+    def distribution_gaussian(self, mean=1.0, rms=0.01, num_points=11, spread=2.5):
+        '''
+            Gaussian distribution of parameters.
+
+            mean : the mean value
+
+            rms : the rms value
+
+        '''
 
         distribution_list = []
 
-        step = 2*spread*sigma/(num_points-1)
-        R = radius - step*(num_points-1)/2.0
+        step = 2*spread*rms/(num_points-1)
+        # the sampled value
+        sample = mean - step*(num_points-1)/2.0
 
-        prefactor = 1/( sigma*np.sqrt(2*np.pi) )
+        prefactor = 1/( rms*np.sqrt(2*np.pi) )
 
         for i in range(num_points):
-            delta = radius-R
-            wt = prefactor*np.exp( - (delta**2)/(2*( sigma**2 ) ) )
+            delta = mean - sample
+            wt = prefactor*np.exp( - (delta**2)/(2*( rms**2 ) ) )
 
             curNanoObject = self.baseNanoObjectClass(pargs=self.pargs)
-            curNanoObject.rebuild( pargs={'radius':R} )
+            curNanoObject.rebuild( pargs={self.argname : sample} )
 
-            distribution_list.append( [R, step, wt, curNanoObject] )
+            distribution_list.append( [sample, step, wt, curNanoObject] )
 
-            R += step
+            sample += step
 
         return distribution_list
 
