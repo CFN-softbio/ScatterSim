@@ -1185,7 +1185,10 @@ class CylinderNanoObject(NanoObject):
 
         qr = np.hypot(qx, qy)
 
-        F = 2*j0(qz*H/2.)*j1(qr*R)/qr/R + 1j*0
+        # NOTE : Numpy's sinc function adds 
+        # a factor of pi in we need to remove.
+        # Why numpy... why??? ><
+        F = 2*np.sinc(qz*H/2./np.pi)*j1(qr*R)/qr/R + 1j*0
         F *= phase
         F *= self.pargs['delta_rho']*volume
 

@@ -80,8 +80,6 @@ class CompositeNanoObject(NanoObject):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates.
         rvec : [x,y,z]
-
-        This method should be overwritten.
         """
         # always transform first
         rvec = self.map_rcoord(rvec)
