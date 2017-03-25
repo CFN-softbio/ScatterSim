@@ -14,6 +14,10 @@ Original Contributors: Kevin G. Yager and Yugang Zhang
 
 Contributors to new code: Julien Lhermitte
 
+Examples:
+For some examples, please see:
+http://www.github.com/CFN-softbio/ScatterSim-examples
+
 
 References:
 - Theory behind code:
