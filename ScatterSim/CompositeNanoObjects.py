@@ -26,6 +26,13 @@ class CompositeNanoObject(NanoObject):
         This is new compared to Kevin's old code. This is redundant with his
         Lattice class but allows to make more complex objects without
         worrying about the lattice.
+
+
+        Notes
+        -----
+
+        Be very careful about subtracting objects. Make sure to think about the
+        scenario where there exists an ambient solution (rho_ambient).
     '''
     def __init__(self, objlist, parglist=None, pargs={}):
         super(CompositeNanoObject, self).__init__(pargs=pargs)
@@ -391,21 +398,18 @@ class CoreShellNanoObject(CompositeNanoObject):
             rho_ambient : the ambient density (solvent)
 
             Note : all rho's must be *positive*
+
+        Notes
+        -----
+        Use of non-zero ambient has not been tested.
+        This has been thought through but should be tested.
+
     '''
     def __init__(self, pargs={}):
         objslist = list()
         pargslist = list()
 
         objslist = [SphereNanoObject, SphereNanoObject]
-
-        # the inner part is inner-outer (to compensate for outer sphere)
-        density_diff = pargs['rho_object_inner'] - pargs['rho_object_outer']
-        if density_diff < 0:
-            sign_inner =-1
-        else:
-            sign_inner = 1
-        # abs val matters only, even when comparing with solvent, rho_ambient
-        density_diff = np.abs(density_diff)
 
         # check for arguments
         if 'rho_object_inner' not in pargs or\
@@ -415,18 +419,32 @@ class CoreShellNanoObject(CompositeNanoObject):
             'rho_ambient' not in pargs:
             raise ValueError("Missing args, please check correct syntax")
 
+        deltarho_inner = pargs['rho_object_inner'] - pargs['rho_object_outer']
+        deltarho_outer = pargs['rho_object_outer'] - pargs['rho_ambient']
+
+        # get the signs and take absolute value
+        sign_inner = 1
+        if deltarho_inner < 0:
+            sign_inner = -1
+            deltarho_inner = np.abs(deltarho_inner)
+
+        sign_outer = 1
+        if deltarho_outer < 0:
+            sign_outer = -1
+            deltarho_outer = np.abs(deltarho_outer)
+
         pargs_inner = {
                 'radius' : pargs['radius_inner'],
-                'rho_object_inner' : density_diff,
-                'rho_ambient' : pargs['rho_ambient'],
+                'rho_object' : deltarho_inner,
+                'rho_ambient' : 0,
                 'sign' : sign_inner
                 }
 
         pargs_outer = {
                 'radius' : pargs['radius_outer'],
-                'rho_object_outer' : pargs['rho_object_outer'],
-                'rho_ambient' : pargs['rho_ambient'],
-                'sign' : 1
+                'rho_object' : deltarho_outer,
+                'rho_ambient' : 0,
+                'sign' : sign_outer
                 }
 
         pargslist = [pargs_inner, pargs_outer]
