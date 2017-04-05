@@ -283,6 +283,21 @@ class Lattice:
         """Returns the sum of the form factor of particles in the unit cell."""
         return self.sum_over_objects('form_factor', qvec[0].shape, complex, qvec)
 
+    def projections(self, length, npoints=100):
+        """Returns the sum of the form factor of particles in the unit cell."""
+        V1 = np.zeros((npoints, npoints))
+        V2 = np.zeros((npoints, npoints))
+        V3 = np.zeros((npoints, npoints))
+        cts = 0.
+
+        for obj in self.lattice_objects:
+            V1tmp, V2tmp, V3tmp = obj.projections(length, npoints=npoints)
+            V1 += V1tmp
+            V2 += V2tmp
+            V3 += V3tmp
+
+        return V1, V2, V3
+
     def form_factor_squared(self, qvec):
         """Returns the sum of the form factor of particles in the unit cell."""
         return self.sum_over_objects('form_factor_squared', qvec[0].shape, float, qvec)
