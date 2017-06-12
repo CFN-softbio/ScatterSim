@@ -626,6 +626,10 @@ class PolydisperseNanoObject(NanoObject):
                 self.distribution_list = \
                     self.distribution_gaussian(mean=mean_val, rms=rms_val,
                                                num_points=n, spread=spread)
+            elif self.pargs['distribution_type'] == 'lognormal':
+                self.distribution_list = \
+                    self.distribution_lognormal(mean=mean_val, rms=rms_val,
+                                               num_points=n, spread=spread)
             else:
                 print( "Unknown distribution type in distribution()." )
 
@@ -654,6 +658,39 @@ class PolydisperseNanoObject(NanoObject):
         for i in range(num_points):
             delta = mean - sample
             wt = prefactor*np.exp( - (delta**2)/(2*( rms**2 ) ) )
+
+            curNanoObject = self.baseNanoObjectClass(pargs=self.pargs)
+            curNanoObject.rebuild( pargs={self.argname : sample} )
+
+            distribution_list.append( [sample, step, wt, curNanoObject] )
+
+            sample += step
+
+        return distribution_list
+
+    def distribution_lognormal(self, mean=1.0, rms=0.01, num_points=91, spread=10):
+        '''
+            Lognormal distribution of parameters.
+
+            mean : this here will mean the scale of the lognorm (the higher the further the peak)
+
+            rms : this will mean the shape of the lognorm distribution
+
+        '''
+        from scipy.stats import lognorm
+
+        distribution_list = []
+        actual_mean = lognorm.mean(rms, loc=0, scale=mean)
+        actual_std = lognorm.std(rms, loc=0, scale=mean)
+
+        # use the actual mean and std from lognormal distribution, dont
+        # use the parameters, which are for the underlying Gaussian distribution
+        step = 2*spread*actual_std/(num_points-1)
+        # the sampled value
+        sample = actual_mean - step*(num_points-1)/2.0
+
+        for i in range(num_points):
+            wt = lognorm.pdf(sample, rms, loc=0, scale=mean)
 
             curNanoObject = self.baseNanoObjectClass(pargs=self.pargs)
             curNanoObject.rebuild( pargs={self.argname : sample} )
