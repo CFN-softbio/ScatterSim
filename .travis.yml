@@ -14,7 +14,7 @@ before_install:
   - ./miniconda.sh -b -p ~/mc
   - export PATH=~/mc/bin:$PATH
   - conda update conda --yes
-#- export CONDARC=ci/condarc
+  - export CONDARC=ci/condarc
 
 install:
   - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY coverage cython flake8
