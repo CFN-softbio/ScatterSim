@@ -1,5 +1,10 @@
 language: python
 
+# TODO : fix this
+#env:
+#    #global:
+#      #- FLAKE8_FLAGS: "--exclude=old,extras,tests --ignore E402"
+
 python:
   - 3.4
   - 3.5
@@ -24,7 +29,7 @@ install:
 
 script:
   - coverage run run_tests.py
-  - flake8 $TRAVIS_BUILD_DIR/ScatterSim
+  - flake8 --exclude=old,extras,tests --ignore E402,E226,W503 $TRAVIS_BUILD_DIR/ScatterSim 
 
 after_success:
 #  - codecov
