@@ -1,11 +1,13 @@
-from .NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject, SphereNanoObject
+from .NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject,\
+    SphereNanoObject
 import numpy as np
 from copy import deepcopy
 # This file is where more complex nano objects can be stored
-# These interface the same way as NanoObjects but since they're a little more complex 
-# it makes sense to separate them from NanoObjects
+# These interface the same way as NanoObjects but since they're a little more
+# complex it makes sense to separate them from NanoObjects
 # TODO : Better simpler API for making composite object
 # like make_composite( objectslist, pargslist)
+
 
 class CompositeNanoObject(NanoObject):
     ''' This is a nano object made up of a collection of nano objects.
@@ -14,14 +16,15 @@ class CompositeNanoObject(NanoObject):
         Need to redefine all the form factors etc since now they're computed
         for each element.
 
-        objlist : either list of object identifier classes or objects themselves
+        objlist : either list of object identifier classes or objects
+        themselves
         parglist : parameters for the object classes. If set to None, then
-            objlist is assume a list of objects, and not classes
+        objlist is assume a list of objects, and not classes
 
         There is a new parameter in the pargs, it is 'sign'. If it's one, the
-            sample adds. If it's negative, it subtracts. Useful for things like
-            core shell. Playing with 'rho' is too risky so I reserved a
-            parameter for it.
+        sample adds. If it's negative, it subtracts. Useful for things like
+        core shell. Playing with 'rho' is too risky so I reserved a parameter
+        for it.
 
         This is new compared to Kevin's old code. This is redundant with his
         Lattice class but allows to make more complex objects without
@@ -34,6 +37,7 @@ class CompositeNanoObject(NanoObject):
         Be very careful about subtracting objects. Make sure to think about the
         scenario where there exists an ambient solution (rho_ambient).
     '''
+
     def __init__(self, objlist, parglist=None, pargs={}):
         super(CompositeNanoObject, self).__init__(pargs=pargs)
 
@@ -68,19 +72,18 @@ class CompositeNanoObject(NanoObject):
         # first rotate just as for V
         qvector = self.map_qcoord(qvector)
 
-        F = np.zeros_like(qvector[0],dtype=complex)
+        F = np.zeros_like(qvector[0], dtype=complex)
         for nobj in self.nano_objects:
-            F += nobj.pargs['sign']*nobj.form_factor(qvector)*phase
+            F += nobj.pargs['sign'] * nobj.form_factor(qvector) * phase
 
         return F
-
 
     def volume(self):
         ''' Return the sum of the volume of all objects.
         '''
         volume = 0.
         for nobj in self.nano_objects:
-            volume += nobj.pargs['sign']*nobj.volume()
+            volume += nobj.pargs['sign'] * nobj.volume()
         return volume
 
     def V(self, rvec):
@@ -93,14 +96,16 @@ class CompositeNanoObject(NanoObject):
 
         Vtot = np.zeros_like(rvec[0])
         for nobj in self.nano_objects:
-            Vtot += nobj.pargs['sign']*nobj.V(rvec)
+            Vtot += nobj.pargs['sign'] * nobj.V(rvec)
 
         return Vtot
+
 
 class OctahedronNanoObject(CompositeNanoObject):
     ''' An octahedron made of two pyramids.
         This is a composite nanoobject.
     '''
+
     def __init__(self, pargs={}):
         objslist = list()
         pargslist = list()
@@ -108,8 +113,8 @@ class OctahedronNanoObject(CompositeNanoObject):
         # need to correctly set up positions and angles
         # parameters : obj, x0, y0, z0, eta, theta, phi, sign (set to 1)
         parameters = [
-                [PyramidNanoObject, 0, 0, 0, 0, 0, 0, 1],
-                [PyramidNanoObject, 0, 0, 0, 0, 180, 0, 1],
+            [PyramidNanoObject, 0, 0, 0, 0, 0, 0, 1],
+            [PyramidNanoObject, 0, 0, 0, 0, 180, 0, 1],
         ]
         for i in range(len(parameters)):
             objslist.append(parameters[i][0])
@@ -124,6 +129,7 @@ class OctahedronNanoObject(CompositeNanoObject):
             pargslist[i]['sign'] = parameters[i][7]
 
         super(OctahedronNanoObject, self).__init__(objslist, pargslist, pargs)
+
 
 class HollowOctahedronNanoObject(CompositeNanoObject):
     ''' An octahedron made of two pyramids.
@@ -140,6 +146,7 @@ class HollowOctahedronNanoObject(CompositeNanoObject):
         inner_radius : inner radius of octahedron (not a used parg)
 
     '''
+
     def __init__(self, pargs={}):
         objslist = list()
         pargslist = list()
@@ -150,11 +157,12 @@ class HollowOctahedronNanoObject(CompositeNanoObject):
             raise ValueError("Need to specify ratio of inner to outer radius")
 
         outer_radius = pargs['radius']
-        inner_radius = outer_radius*pargs['radius_ratio']
-        # parameters : obj, x0, y0, z0, eta, theta, phi, sign (1 adds, -1 subtracts)
+        inner_radius = outer_radius * pargs['radius_ratio']
+        # parameters : obj, x0, y0, z0, eta, theta, phi, sign (1 adds, -1
+        # subtracts)
         parameters = [
-                [OctahedronNanoObject, 0, 0, 0, 0, 0, 0, inner_radius, -1],
-                [OctahedronNanoObject, 0, 0, 0, 0, 0, 0, outer_radius,  1],
+            [OctahedronNanoObject, 0, 0, 0, 0, 0, 0, inner_radius, -1],
+            [OctahedronNanoObject, 0, 0, 0, 0, 0, 0, outer_radius, 1],
         ]
         for i in range(len(parameters)):
             objslist.append(parameters[i][0])
@@ -169,9 +177,16 @@ class HollowOctahedronNanoObject(CompositeNanoObject):
             pargslist[i]['radius'] = parameters[i][7]
             pargslist[i]['sign'] = parameters[i][8]
 
-        super(HollowOctahedronNanoObject, self).__init__(objslist, pargslist, pargs)
+        super(
+            HollowOctahedronNanoObject,
+            self).__init__(
+            objslist,
+            pargslist,
+            pargs)
 
 # OctahedronCylindersNanoObject
+
+
 class OctahedronCylindersNanoObject(CompositeNanoObject):
     """An octahedron object made of cylinders or like object. The canonical
         (unrotated) version has the square cross-section in the x-y plane, with
@@ -194,12 +209,20 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
                 ex : radius, height
             linkerlength : if specified, adds linkers of specified length,
                 centered in between the octahedra
-            linkerradius : if linkerlength specified, will add linkers of this radius
-            rho_linker : if linkerlength specified, adds linkers of this density
-                (defaults to same density as cylinders in octahedra)
-            linkerobject : the object to use for the linkers (defaults to baseObject)
+            linkerradius : if linkerlength specified, will add linkers of this
+            radius
+            rho_linker : if linkerlength specified, adds linkers of this
+            density (defaults to same density as cylinders in octahedra)
+            linkerobject : the object to use for the linkers (defaults to
+            baseObject)
     """
-    def __init__(self, baseObject=None, linkerObject=None, pargs={}, seed=None):
+
+    def __init__(
+            self,
+            baseObject=None,
+            linkerObject=None,
+            pargs={},
+            seed=None):
         if baseObject is None:
             baseObject = CylinderNanoObject
         if linkerObject is None:
@@ -231,23 +254,24 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
         ]
 
         # you flip x or y from original shifts to move along edge axis
-        # not a good explanation but some sort of personal bookkeeping for now...
+        # not a good explanation but some sort of personal bookkeeping for
+        # now...
         shiftfacs = [
-            # top 
-            [0,-1,1],
-            [-1,0,1],
-            [0,1,1],
-            [1, 0,1],
+            # top
+            [0, -1, 1],
+            [-1, 0, 1],
+            [0, 1, 1],
+            [1, 0, 1],
             # middle
-            [-1,1,0],
-            [-1,-1,0],
-            [1,-1,0],
-            [1,1,0],
+            [-1, 1, 0],
+            [-1, -1, 0],
+            [1, -1, 0],
+            [1, 1, 0],
             # bottom
-            [0,1,-1],
+            [0, 1, -1],
             [1, 0, -1],
-            [0,-1, -1],
-            [-1,0,-1]
+            [0, -1, -1],
+            [-1, 0, -1]
         ]
 
         for lbl1 in shiftlabels:
@@ -255,50 +279,50 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
                 pargs[lbl1] = 0.
 
         # calculate shift of COM from edgelength and edgespread
-        fac1 = np.sqrt(2)/2.*((.5*pargs['edgelength']) + pargs['edgespread'])
+        fac1 = np.sqrt(2) / 2. * \
+            ((.5 * pargs['edgelength']) + pargs['edgespread'])
         eL = pargs['edgelength']
         if addlinkers:
             sL = pargs['linkerlength']
 
-
         poslist = [
-        # eta, theta, phi, x0, y0, z0
-        # top part
-        [0, 45, -90, 0, fac1, fac1],
-        [0, 45, 0, fac1, 0, fac1],
-        [0, 45, 90, 0, -fac1, fac1],
-        [0, -45, 0, -fac1, 0, fac1],
-        # now the flat part
-        [0, 90, 45, fac1, fac1, 0],
-        [0, 90, -45, fac1, -fac1, 0],
-        [0, 90, 45, -fac1, -fac1, 0],
-        [0, 90, -45, -fac1, fac1, 0],
-        # finally bottom part
-        [0, 45, -90, 0, -fac1,-fac1],
-        [0, 45, 0, -fac1, 0, -fac1],
-        [0, 45, 90, 0, fac1, -fac1],
-        [0, -45, 0, fac1, 0, -fac1],
+            # eta, theta, phi, x0, y0, z0
+            # top part
+            [0, 45, -90, 0, fac1, fac1],
+            [0, 45, 0, fac1, 0, fac1],
+            [0, 45, 90, 0, -fac1, fac1],
+            [0, -45, 0, -fac1, 0, fac1],
+            # now the flat part
+            [0, 90, 45, fac1, fac1, 0],
+            [0, 90, -45, fac1, -fac1, 0],
+            [0, 90, 45, -fac1, -fac1, 0],
+            [0, 90, -45, -fac1, fac1, 0],
+            # finally bottom part
+            [0, 45, -90, 0, -fac1, -fac1],
+            [0, 45, 0, -fac1, 0, -fac1],
+            [0, 45, 90, 0, fac1, -fac1],
+            [0, -45, 0, fac1, 0, -fac1],
         ]
 
         if addlinkers:
             poslist_linker = [
                 # linkers
-                [0, 0, 0, 0, 0, eL/np.sqrt(2) + sL/2.],
-                [0, 0, 0, 0, 0, -eL/np.sqrt(2) - sL/2.],
-                [0, 90, 0, eL/np.sqrt(2) + sL/2.,0,0],
-                [0, 90, 0, -eL/np.sqrt(2) - sL/2.,0,0],
-                [0, 90, 90, 0, eL/np.sqrt(2) + sL/2., 0],
-                [0, 90, 90, 0, -eL/np.sqrt(2) - sL/2., 0],
+                [0, 0, 0, 0, 0, eL / np.sqrt(2) + sL / 2.],
+                [0, 0, 0, 0, 0, -eL / np.sqrt(2) - sL / 2.],
+                [0, 90, 0, eL / np.sqrt(2) + sL / 2., 0, 0],
+                [0, 90, 0, -eL / np.sqrt(2) - sL / 2., 0, 0],
+                [0, 90, 90, 0, eL / np.sqrt(2) + sL / 2., 0],
+                [0, 90, 90, 0, -eL / np.sqrt(2) - sL / 2., 0],
             ]
             for row in poslist_linker:
                 poslist.append(row)
             shiftfacs_linker = [
-                    [0,0,1],
-                    [0,0,-1],
-                    [1,0,0],
-                    [-1,0,0],
-                    [0,1,0],
-                    [0,-1,0],
+                [0, 0, 1],
+                [0, 0, -1],
+                [1, 0, 0],
+                [-1, 0, 0],
+                [0, 1, 0],
+                [0, -1, 0],
             ]
             for row in shiftfacs_linker:
                 shiftfacs.append(row)
@@ -308,13 +332,13 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
 
         # now add the shift factors
         for i in range(len(poslist)):
-            poslist[i, 3:] += np.sqrt(2)/2.*shiftfacs[i]*pargs[shiftlabels[i]]
-
+            poslist[i, 3:] += np.sqrt(2) / 2. * \
+                shiftfacs[i] * pargs[shiftlabels[i]]
 
         # need to create objslist and pargslist
         objlist = list()
         pargslist = list()
-        for i, pos  in enumerate(poslist):
+        for i, pos in enumerate(poslist):
             objlist.append(baseObject)
 
             eta, phi, theta, x0, y0, z0 = pos
@@ -338,13 +362,26 @@ class OctahedronCylindersNanoObject(CompositeNanoObject):
 
             pargslist.append(pargstmp)
 
-        super(OctahedronCylindersNanoObject, self).__init__(objlist, pargslist, pargs=pargs)
+        super(
+            OctahedronCylindersNanoObject,
+            self).__init__(
+            objlist,
+            pargslist,
+            pargs=pargs)
 
 # CubicCylindersNanoObject
+
+
 class CubicCylindersNanoObject(CompositeNanoObject):
     """ A cylinder nano object aligned along axes, meant for cubic structure.
     """
-    def __init__(self, baseObject=None, linkerObject=None, pargs={}, seed=None):
+
+    def __init__(
+            self,
+            baseObject=None,
+            linkerObject=None,
+            pargs={},
+            seed=None):
         if baseObject is None:
             baseObject = CylinderNanoObject
         if linkerObject is None:
@@ -359,17 +396,17 @@ class CubicCylindersNanoObject(CompositeNanoObject):
         eL = pargs['height']
 
         poslist = [
-        # eta, theta, phi, x0, y0, z0
-        # top part
-        [0, 0, 0, 0, 0, eL/2.],
-        [0, 90, 0, eL/2.,0, 0],
-        [0, 90, 90, 0, eL/2., 0],
+            # eta, theta, phi, x0, y0, z0
+            # top part
+            [0, 0, 0, 0, 0, eL / 2.],
+            [0, 90, 0, eL / 2., 0, 0],
+            [0, 90, 90, 0, eL / 2., 0],
         ]
 
         # need to create objslist and pargslist
         objlist = list()
         pargslist = list()
-        for i, pos  in enumerate(poslist):
+        for i, pos in enumerate(poslist):
             objlist.append(baseObject)
 
             eta, phi, theta, x0, y0, z0 = pos
@@ -384,7 +421,13 @@ class CubicCylindersNanoObject(CompositeNanoObject):
 
             pargslist.append(pargstmp)
 
-        super(CubicCylindersNanoObject, self).__init__(objlist, pargslist, pargs=pargs)
+        super(
+            CubicCylindersNanoObject,
+            self).__init__(
+            objlist,
+            pargslist,
+            pargs=pargs)
+
 
 class CoreShellNanoObject(CompositeNanoObject):
     ''' A core shell nano object.
@@ -405,6 +448,7 @@ class CoreShellNanoObject(CompositeNanoObject):
         This has been thought through but should be tested.
 
     '''
+
     def __init__(self, pargs={}):
         objslist = list()
         pargslist = list()
@@ -416,7 +460,7 @@ class CoreShellNanoObject(CompositeNanoObject):
             'radius_inner' not in pargs or\
             'rho_object_outer' not in pargs or\
             'radius_outer' not in pargs or\
-            'rho_ambient' not in pargs:
+                'rho_ambient' not in pargs:
             raise ValueError("Missing args, please check correct syntax")
 
         deltarho_inner = pargs['rho_object_inner'] - pargs['rho_object_outer']
@@ -434,25 +478,32 @@ class CoreShellNanoObject(CompositeNanoObject):
             deltarho_outer = np.abs(deltarho_outer)
 
         pargs_inner = {
-                'radius' : pargs['radius_inner'],
-                'rho_object' : deltarho_inner,
-                'rho_ambient' : 0,
-                'sign' : sign_inner
-                }
+            'radius': pargs['radius_inner'],
+            'rho_object': deltarho_inner,
+            'rho_ambient': 0,
+            'sign': sign_inner
+        }
 
         pargs_outer = {
-                'radius' : pargs['radius_outer'],
-                'rho_object' : deltarho_outer,
-                'rho_ambient' : 0,
-                'sign' : sign_outer
-                }
+            'radius': pargs['radius_outer'],
+            'rho_object': deltarho_outer,
+            'rho_ambient': 0,
+            'sign': sign_outer
+        }
 
         pargslist = [pargs_inner, pargs_outer]
 
-        super(CoreShellNanoObject, self).__init__(objslist, pargslist, pargs=pargs)
+        super(
+            CoreShellNanoObject,
+            self).__init__(
+            objslist,
+            pargslist,
+            pargs=pargs)
+
 
 class SixCylinderNanoObject(CompositeNanoObject):
     ''' A nano object comprised of six cylinders.'''
+
     def __init__(self, pargs={}):
         ''' Initalized the object.
         '''
@@ -461,28 +512,36 @@ class SixCylinderNanoObject(CompositeNanoObject):
 
         # use default packing if not specified
         if 'packradius' not in pargs:
-            pargs['packradius'] = 2*pargs['radius']/(2*np.pi/6.)
+            pargs['packradius'] = 2 * pargs['radius'] / (2 * np.pi / 6.)
 
         packradius = pargs['packradius']
 
-        dphi = 2*np.pi/6.
+        dphi = 2 * np.pi / 6.
         for i in range(6):
-            x0, y0, z0 = packradius*np.cos(i*dphi), packradius*np.sin(i*dphi), 0
+            x0, y0, z0 = packradius * \
+                np.cos(i * dphi), packradius * np.sin(i * dphi), 0
             pargs_tmp = {
-                        'radius' : pargs['radius'],
-                        'height' : pargs['height'],
-                        'x0' : x0,
-                        'y0' : y0,
-                        'z0' : z0,
-                        }
+                'radius': pargs['radius'],
+                'height': pargs['height'],
+                'x0': x0,
+                'y0': y0,
+                'z0': z0,
+            }
             pargslist.append(pargs_tmp)
             objslist.append(CylinderNanoObject)
 
-        super(SixCylinderNanoObject, self).__init__(objslist, pargslist, pargs=pargs)
+        super(
+            SixCylinderNanoObject,
+            self).__init__(
+            objslist,
+            pargslist,
+            pargs=pargs)
+
 
 class CylinderDumbbellNanoObject(CompositeNanoObject):
     ''' A nano object comprised of a cylinder with two spheres on edges (like a
     dummbell).'''
+
     def __init__(self, pargs={}):
         ''' Initalized the object.
         '''
@@ -495,40 +554,47 @@ class CylinderDumbbellNanoObject(CompositeNanoObject):
         cyl_den = pargs.pop('cylinder_density')
         cyl_height = pargs.pop('cylinder_height')
         sph_rad = pargs.pop('sphere_radius')
-        sph_den = pargs.pop('sphere_density')
+        # sph_den = pargs.pop('sphere_density')
 
-        pargs_cyl= {
-                        'radius' : cyl_rad,
-                        'height' : cyl_height,
-                        'x0' : 0,
-                        'y0' : 0,
-                        'z0' : 0,
-                        'rho_ambient' : cyl_den
+        pargs_cyl = {
+            'radius': cyl_rad,
+            'height': cyl_height,
+            'x0': 0,
+            'y0': 0,
+            'z0': 0,
+            'rho_ambient': cyl_den
         }
 
-        el = (cyl_height)*.5
+        el = (cyl_height) * .5
 
         pargs_sphere1 = {
-                        'radius' : sph_rad,
-                        'x0' : 0,
-                        'y0' : 0,
-                        'z0' : -el,
+            'radius': sph_rad,
+            'x0': 0,
+            'y0': 0,
+            'z0': -el,
         }
 
         pargs_sphere2 = {
-                        'radius' : sph_rad,
-                        'x0' : 0,
-                        'y0' : 0,
-                        'z0' : el,
+            'radius': sph_rad,
+            'x0': 0,
+            'y0': 0,
+            'z0': el,
         }
 
         pargslist = [pargs_cyl, pargs_sphere1, pargs_sphere2]
         objslist = [CylinderNanoObject, SphereNanoObject, SphereNanoObject]
 
-        super(CylinderDumbbellNanoObject, self).__init__(objslist, pargslist, pargs=pargs)
+        super(
+            CylinderDumbbellNanoObject,
+            self).__init__(
+            objslist,
+            pargslist,
+            pargs=pargs)
+
 
 class CylinderBulgeNanoObject(CompositeNanoObject):
     ''' A nano object comprised of a cylinder with a sphere bulge in center.'''
+
     def __init__(self, pargs={}):
         ''' Initalized the object.
         '''
@@ -543,25 +609,29 @@ class CylinderBulgeNanoObject(CompositeNanoObject):
         sph_rad = pargs.pop('sphere_radius')
         sph_den = pargs.pop('sphere_density')
 
-        pargs_cyl= {
-                        'radius' : cyl_rad,
-                        'height' : cyl_height,
-                        'x0' : 0,
-                        'y0' : 0,
-                        'z0' : 0,
-                        'rho_object' : cyl_den
+        pargs_cyl = {
+            'radius': cyl_rad,
+            'height': cyl_height,
+            'x0': 0,
+            'y0': 0,
+            'z0': 0,
+            'rho_object': cyl_den
         }
 
         pargs_sphere = {
-                        'radius' : sph_rad,
-                        'x0' : 0,
-                        'y0' : 0,
-                        'z0' : 0,
-                        'rho_object' : sph_den,
+            'radius': sph_rad,
+            'x0': 0,
+            'y0': 0,
+            'z0': 0,
+            'rho_object': sph_den,
         }
-
 
         pargslist = [pargs_cyl, pargs_sphere]
         objslist = [CylinderNanoObject, SphereNanoObject]
 
-        super(CylinderBulgeNanoObject, self).__init__(objslist, pargslist, pargs=pargs)
+        super(
+            CylinderBulgeNanoObject,
+            self).__init__(
+            objslist,
+            pargslist,
+            pargs=pargs)
