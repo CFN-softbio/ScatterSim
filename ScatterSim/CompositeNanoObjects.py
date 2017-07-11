@@ -1,4 +1,4 @@
-from ScatterSim.NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject, SphereNanoObject
+from .NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject, SphereNanoObject
 import numpy as np
 from copy import deepcopy
 # This file is where more complex nano objects can be stored

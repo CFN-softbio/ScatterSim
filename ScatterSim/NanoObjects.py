@@ -37,6 +37,31 @@ class NanoObject:
         # this will set the rotation matrix
         self.set_angles(eta=eta, phi=phi, theta=theta)
 
+    def __add__(self, other):
+        ''' The add operator should now
+            just create a new composite NanoObject.
+            There are four cases:
+                NanoObject + NanoObject
+                NanoObject + CompositeNanoObject
+                CompositeNanoObject + CompositeNanoObject
+                CompositeNanoObject + NanoObject
+
+            # Note : the pargs of the new object is overridden by original object
+        '''
+        if isinstance(self, CompositeNanoObject):
+            nano_objects = self.nano_objects
+            pargs = self.pargs
+        else:
+            nano_objects = [self]
+            # no pargs for parent composite object set yet
+            pargs = {}
+
+        nano_objects.append(other)
+
+        # TODO : should move to composite nano object code
+        obj = CompositeNanoObject(nano_objects, pargs=pargs)
+        obj.pargs['sign'] = 1.
+        return obj
 
     def check_arg(self, name, pargs, default=0):
         ''' Check dictionary for a parameter. If not there, set the parg
@@ -89,8 +114,12 @@ class NanoObject:
         if y0 is not None:
             self.pargs['y0'] = np.copy(y0)
             y0 = self.pargs['y0']
+        else:
+            y0 = self.pargs['y0']
         if z0 is not None:
             self.pargs['z0'] = np.copy(z0)
+            z0 = self.pargs['z0']
+        else:
             z0 = self.pargs['z0']
 
         self.origin = np.array([x0, y0, z0])
@@ -191,6 +220,8 @@ class NanoObject:
         if not hasattr(self,'origin'):
             raise ValueError("Origin has not been set (please set origin to something"
                     " like (0,0,0) in the object initialization")
+        # update the origin from the x0, y0, z0 values
+        self.set_origin()
 
         return self.map_coord(rcoord,self.rotation_matrix,origin=self.origin)
 
@@ -1343,3 +1374,5 @@ class PyramidNanoObject(NanoObject):
         F *= self.pargs['delta_rho']
 
         return F
+
+from .CompositeNanoObjects import CompositeNanoObject
