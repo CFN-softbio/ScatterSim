@@ -866,7 +866,7 @@ class RandomizedNanoObject(NanoObject):
             whose radius follows the lognormal distribution, you would put:
                 {
                  'radius' : {
-                             'distribution_type' : 'lognormal', 
+                             'distribution_type' : 'lognormal',
                              'mean' : 1, # average val
                              'sigma' : .1,  #std deviation
                             },
@@ -895,7 +895,7 @@ class RandomizedNanoObject(NanoObject):
         NanoObject.__init__(self, pargs=pargs)
 
         if argdict is None:
-            argdict = dict(radius={'distribution' : 'gaussian', 
+            argdict = dict(radius={'distribution' : 'gaussian',
                 'sigma' : .1, 'mean' : 1})
         if 'distribution_num_points' not in pargs:
             pargs['distribution_num_points'] = 21
@@ -947,7 +947,7 @@ class RandomizedNanoObject(NanoObject):
                 when summing run same object, rebuild and re-calculate
                 since it's random, you don't want to cache either
                 'distribution_num_points' : 21,
-                {'radius' : {'distribution_type' : 'gaussian', 
+                {'radius' : {'distribution_type' : 'gaussian',
                     # parameters specific to distribution
                     'avg' : 1, # average val
                     'std' : .1,  #std deviation
@@ -964,13 +964,13 @@ class RandomizedNanoObject(NanoObject):
         ''' Sample a point from a distribution specified by
             dist_dict
             Currently supported:
-                'distribution_type' (case insensitive) 
+                'distribution_type' (case insensitive)
                     'Gaussian' or 'normal'
-                        parameters : 
+                        parameters :
                             'mean' : average of Gaussian (normal) distribution
                             'sigma' : standard deviation of Gaussian (normal) distribution
-                    'uniform' : 
-                        parameters : 
+                    'uniform' :
+                        parameters :
                             'low' : lower bound of distribution
                             'high' : upper bound of distribution
                     'lognormal'
@@ -1253,7 +1253,7 @@ class CylinderNanoObject(NanoObject):
 
         qr = np.hypot(qx, qy)
 
-        # NOTE : Numpy's sinc function adds 
+        # NOTE : Numpy's sinc function adds
         # a factor of pi in we need to remove.
         # Why numpy... why??? ><
         F = 2*np.sinc(qz*H/2./np.pi)*j1(qr*R)/qr/R + 1j*0

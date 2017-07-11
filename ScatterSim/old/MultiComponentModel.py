@@ -20,16 +20,17 @@
 ###################################################################
 
 
-from ScatterSim.BaseClasses import Potential, Model, arrays_equal
-from ScatterSim.BaseClasses import radians, cos, sin
+from ScatterSim.BaseClasses import Potential, Model, arrays_equal, value_at
+from ScatterSim.BaseClasses import radians, cos, sin, degrees
 from ScatterSim import gamma
 import os, sys
 
 from cmath import exp as cexp
 
+from numpy import sinc
 import random
 import numpy as np
-
+import matplotlib.pyplot as plt
 # Bessel functions of the first kind, orders 0 and 1
 from scipy.special import j0, j1
 
@@ -492,31 +493,31 @@ class NanoObject(Potential):
         #q_zeros = np.zeros(len(q_list))
         #int_list = self.form_factor_array(q_zeros,q_zeros,q_list)
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
         else:
             # Make y-axis scientific notation
             fig.gca().yaxis.major.formatter.set_scientific(True)
             fig.gca().yaxis.major.formatter.set_powerlimits((3,3))
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
-        pylab.ylabel( r'$F(q)$' )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
+        plt.ylabel( r'$F(q)$' )
 
-        #xi, xf, yi, yf = pylab.axis()
+        #xi, xf, yi, yf = plt.axis()
         #yf = 5e5
         #yi = 0
-        #pylab.axis( [xi, xf, yi, yf] )
+        #plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -535,30 +536,30 @@ class NanoObject(Potential):
             int_list.append( self.form_factor_intensity(0,0,q) )
 
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
         else:
             # Make y-axis scientific notation
             fig.gca().yaxis.major.formatter.set_scientific(True)
             fig.gca().yaxis.major.formatter.set_powerlimits((3,3))
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
-        pylab.ylabel( r'$F(q)$' )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
+        plt.ylabel( r'$F(q)$' )
 
-        #xi, xf, yi, yf = pylab.axis()
+        #xi, xf, yi, yf = plt.axis()
         #yf = 5e5
-        #pylab.axis( [xi, xf, yi, yf] )
+        #plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -1837,7 +1838,7 @@ class PolydisperseRodNanoObject(NanoObject):
     experimental.
 
     To average over orientations, a new rotation matrix will need to be
-    computed. 
+    computed.
 
         """
 
@@ -3178,7 +3179,8 @@ class CubeNanoObject(NanoObject):
     def form_factor(self, qx, qy, qz):
         """Returns the complex-amplitude of the form factor at the given
         q-coordinates."""
-
+        import numpy
+        from numpy import sinc
         qx, qy, qz = self.rotate_coord(qx, qy, qz)
 
         R = self.pargs['radius']
@@ -5476,7 +5478,7 @@ class OctahedronCylindersNanoObject(NanoObject):
         # you flip x or y from original shifts to move along edge axis
         # not a good explanation but some sort of personal bookkeeping for now...
         shiftfacs = np.array([
-            # top 
+            # top
             [0,-1,1],
             [-1,0,1],
             [0,1,1],
@@ -5708,7 +5710,7 @@ class SpinyOctahedronCylindersNanoObject(NanoObject):
         # you flip x or y from original shifts to move along edge axis
         # not a good explanation but some sort of personal bookkeeping for now...
         shiftfacs = np.array([
-            # top 
+            # top
             [0,-1,1],
             [-1,0,1],
             [0,1,1],
@@ -6637,21 +6639,21 @@ class PeakShape(object):
         q_list = np.linspace( -plot_width, plot_width, num_points )
         int_list = self.val_array( q_list, 0.0 )
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
-        pylab.ylabel( 'Intensity (a.u.)', size=30 )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
+        plt.ylabel( 'Intensity (a.u.)', size=30 )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -6909,7 +6911,7 @@ class Lattice(object):
 
             # Search dictionary, see if this qhkl already exists
             found = False
-            for q in sorted(hkl_list_1d.iterkeys()):
+            for q in sorted(hkl_list_1d.keys()):
                 if abs(qhkl-q)<tolerance:
                     found = True
                     found_q = q
@@ -6963,7 +6965,7 @@ class Lattice(object):
 
             fs = self.sum_over_objects(qhkl_vector, h, k, l)
             term1 = fs*fs.conjugate()
-            # if 
+            # if
             #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
             term2 = self.G_q(qhkl_vector)
             term3 = peak.val( q-qhkl )
@@ -6976,7 +6978,7 @@ class Lattice(object):
 
         summation = np.zeros( (len(q_list)) )
         # save objects in a list first, then grab them, then compute the values
-        # faster generally... this is crude but eventually we should be 
+        # faster generally... this is crude but eventually we should be
         # able to improve it
         # TODO : have not finished this yet, keeping old version uncommented
         hkl_info = self.iterate_over_hkl(max_hkl=max_hkl)
@@ -7344,30 +7346,30 @@ class Lattice(object):
         S_list = self.structure_factor_isotropic_array( q_list, peak, c=c, background=background, max_hkl=max_hkl )
 
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
 
-        pylab.plot( q_list, S_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, S_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
             fig.subplots_adjust(left=0.15)
         else:
             # Make y-axis scientific notation
             fig.gca().yaxis.major.formatter.set_scientific(True)
             fig.gca().yaxis.major.formatter.set_powerlimits((3,3))
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
-        pylab.ylabel( r'$S(q)$' )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$' )
+        plt.ylabel( r'$S(q)$' )
 
-        #xi, xf, yi, yf = pylab.axis()
-        #pylab.axis( [xi, xf, yi, yf] )
+        #xi, xf, yi, yf = plt.axis()
+        #plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return S_list
 
@@ -7385,24 +7387,24 @@ class Lattice(object):
         int_list = self.intensity_array( q_list, peak, c=c, background=background, max_hkl=max_hkl )
 
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=2.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=2.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
-        pylab.ylabel( 'Intensity (a.u.)', size=30 )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
+        plt.ylabel( 'Intensity (a.u.)', size=30 )
 
-        #xi, xf, yi, yf = pylab.axis()
-        #pylab.axis( [xi, xf, yi, yf] )
+        #xi, xf, yi, yf = plt.axis()
+        #plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -7418,24 +7420,24 @@ class Lattice(object):
         int_list = self.form_factor_intensity_isotropic_array( q_list, num_phi=50, num_theta=50)
 
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.17, bottom=0.15, right=0.94, top=0.94)
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
-        pylab.ylabel( r'$P(q)$', size=30 )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
+        plt.ylabel( r'$P(q)$', size=30 )
 
-        #xi, xf, yi, yf = pylab.axis()
-        #pylab.axis( [xi, xf, yi, yf] )
+        #xi, xf, yi, yf = plt.axis()
+        #plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -7452,27 +7454,27 @@ class Lattice(object):
         int_list = self.beta_ratio_array( q_list )
 
 
-        pylab.rcParams['axes.labelsize'] = 30
-        pylab.rcParams['xtick.labelsize'] = 'xx-large'
-        pylab.rcParams['ytick.labelsize'] = 'xx-large'
-        fig = pylab.figure()
+        plt.rcParams['axes.labelsize'] = 30
+        plt.rcParams['xtick.labelsize'] = 'xx-large'
+        plt.rcParams['ytick.labelsize'] = 'xx-large'
+        fig = plt.figure()
         fig.subplots_adjust(left=0.14, bottom=0.15, right=0.94, top=0.94)
 
-        pylab.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
+        plt.plot( q_list, int_list, color=(0,0,0), linewidth=3.0 )
 
         if ylog:
-            pylab.semilogy()
+            plt.semilogy()
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
-        pylab.ylabel( r'$\beta(q)$', size=30 )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=30 )
+        plt.ylabel( r'$\beta(q)$', size=30 )
 
         if not ylog:
-            xi, xf, yi, yf = pylab.axis()
+            xi, xf, yi, yf = plt.axis()
             yi = 0.0
             yf = 1.05
-            pylab.axis( [xi, xf, yi, yf] )
+            plt.axis( [xi, xf, yi, yf] )
 
-        pylab.savefig( filename )
+        plt.savefig( filename )
 
         return int_list
 
@@ -7494,7 +7496,7 @@ class Lattice(object):
 
         s += "    (a, b, c) = (%.3f,%.3f,%.3f) in nm\n" % (self.lattice_spacing_a,self.lattice_spacing_b,self.lattice_spacing_c)
         s += "    (alpha, beta, gamma) = (%.3f,%.3f,%.3f) in radians\n" % (self.alpha,self.beta,self.gamma)
-        s += "                         = (%.2f,%.2f,%.2f) in degrees\n" % (degrees(self.alpha),degrees(self.beta),degrees(self.gamma))
+       # s += "                         = (%.2f,%.2f,%.2f) in degrees\n" % (degrees(self.alpha),degrees(self.beta),degrees(self.gamma))
         s += "    volume = %.4f nm^3\n\n" % self.unit_cell_volume()
         s += "    Objects:\n"
         for i, obj in enumerate(self.objects):
@@ -10278,51 +10280,51 @@ class MultiComponentFit(object):
         bigger_axes_fonts = True
 
         axes_font_size = 30
-        pylab.rcParams['axes.labelsize'] = axes_font_size # Not used (override)
-        pylab.rcParams['xtick.labelsize'] = 'x-large'
-        pylab.rcParams['ytick.labelsize'] = 'x-large'
+        plt.rcParams['axes.labelsize'] = axes_font_size # Not used (override)
+        plt.rcParams['xtick.labelsize'] = 'x-large'
+        plt.rcParams['ytick.labelsize'] = 'x-large'
 
         if bigger_axes_fonts:
             axes_font_size = 35
-            pylab.rcParams['xtick.labelsize'] = 25
-            pylab.rcParams['ytick.labelsize'] = 25
+            plt.rcParams['xtick.labelsize'] = 25
+            plt.rcParams['ytick.labelsize'] = 25
 
 
 
-        fig = pylab.figure()
+        fig = plt.figure()
         if bigger_axes_fonts:
             ax1 = fig.add_axes( [0.15,0.18,0.94-0.15,0.94-0.15-res_fig_height] )
         else:
             ax1 = fig.add_axes( [0.15,0.15,0.94-0.15,0.94-0.15-res_fig_height] )
 
         if err_vals != []:
-            pylab.errorbar( q_list, int_list, yerr=err_vals, fmt='o', color=(0,0,0), ecolor=(0.5,0.5,0.5), markersize=6.0 )
+            plt.errorbar( q_list, int_list, yerr=err_vals, fmt='o', color=(0,0,0), ecolor=(0.5,0.5,0.5), markersize=6.0 )
         else:
-            pylab.plot( q_list, int_list, 'o', color=(0,0,0), markersize=6.0 )
+            plt.plot( q_list, int_list, 'o', color=(0,0,0), markersize=6.0 )
 
         if xlog and ylog:
-            pylab.loglog()
+            plt.loglog()
         else:
             if xlog:
-                pylab.semilogx()
+                plt.semilogx()
             if ylog:
-                pylab.semilogy()
+                plt.semilogy()
 
-        pylab.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=axes_font_size )
+        plt.xlabel( r'$q \, (\mathrm{nm}^{-1})$', size=axes_font_size )
         if ptype=='form_factor':
-            pylab.ylabel( r'$P(q)$', size=axes_font_size )
+            plt.ylabel( r'$P(q)$', size=axes_font_size )
         elif ptype=='structure_factor':
-            pylab.ylabel( r'$S(q)$', size=axes_font_size )
+            plt.ylabel( r'$S(q)$', size=axes_font_size )
         else:
-            pylab.ylabel( 'Intensity (a.u.)', size=axes_font_size )
+            plt.ylabel( 'Intensity (a.u.)', size=axes_font_size )
 
         # Get axis scaling
-        xi, xf, yi, yf = pylab.axis()
+        xi, xf, yi, yf = plt.axis()
 
 
         if show_extended:
-            pylab.plot( q_fit_extended, int_fit_extended, '-', color=(0.5,0.5,1), linewidth=1.0 )
-        pylab.plot( q_fit, int_fit, '-', color=(0,0,1), linewidth=2.0 )
+            plt.plot( q_fit_extended, int_fit_extended, '-', color=(0.5,0.5,1), linewidth=1.0 )
+        plt.plot( q_fit, int_fit, '-', color=(0,0,1), linewidth=2.0 )
 
 
 
@@ -10333,7 +10335,7 @@ class MultiComponentFit(object):
             y_peak_indexing = []
             labels_indexing = []
 
-            for q in sorted(list1d.iterkeys()):
+            for q in sorted(list1d.keys()):
                 h, k, l, m, f = list1d[q]
                 miller = [h, k, l]
                 if indexing_simplify:
@@ -10356,10 +10358,10 @@ class MultiComponentFit(object):
             rescaling = (q0_intensity/y_peak_indexing[0])*0.5
             y_peak_indexing = np.asarray( y_peak_indexing )*rescaling
 
-            markerline, stemlines, baseline = pylab.stem( x_peak_indexing, y_peak_indexing )
-            pylab.setp(markerline, 'markersize', 4.0)
+            markerline, stemlines, baseline = plt.stem( x_peak_indexing, y_peak_indexing )
+            plt.setp(markerline, 'markersize', 4.0)
             for xc, yc, lc in zip(x_peak_indexing, y_peak_indexing, labels_indexing):
-                pylab.text( xc, yc+q0_intensity*0.015, lc, size=8, verticalalignment='bottom', horizontalalignment='center' )
+                plt.text( xc, yc+q0_intensity*0.015, lc, size=8, verticalalignment='bottom', horizontalalignment='center' )
 
         # Set axis scaling
         if scaling==None:
@@ -10367,13 +10369,13 @@ class MultiComponentFit(object):
             xi = qi
             if qf!=None:
                 xf = qf
-            pylab.axis( [xi, xf, yi, yf] )
+            plt.axis( [xi, xf, yi, yf] )
         else:
-            pylab.axis( scaling )
+            plt.axis( scaling )
 
 
         # Get ax1 final scaling
-        x1i, x1f, y1i, y1f = pylab.axis()
+        x1i, x1f, y1i, y1f = plt.axis()
         # Find indices of 'data of interest'
         index_start = 0
         index_finish = 0
@@ -10394,7 +10396,7 @@ class MultiComponentFit(object):
         else:
             print( "Error: Unknown type of 'chi' in plot()." )
 
-        pylab.plot( self.q_list, residuals, '-', color='b', linewidth=2.0 )
+        plt.plot( self.q_list, residuals, '-', color='b', linewidth=2.0 )
 
 
 
@@ -10416,14 +10418,14 @@ class MultiComponentFit(object):
         energy_str = "%.4g" % (energy)
 
         chi_str = r"$\chi_{\mathrm{red}}^2 = " + chi_sq_red_str + "$\n$\chi_{\mathrm{P}}^2 = " + chi_sq_p_str + "$\n$E=" + energy_str + "$"
-        pylab.figtext( 0.94-0.01, 0.94-res_fig_height-0.01, chi_str, horizontalalignment='right', verticalalignment='top', size=20 )
+        plt.figtext( 0.94-0.01, 0.94-res_fig_height-0.01, chi_str, horizontalalignment='right', verticalalignment='top', size=20 )
 
 
         # Title
         if title!='':
             DW = self.model.lattice.sigma_D
             title = title + ' (%s, DW = %.2f)' % (self.model.lattice.__class__.__name__, DW)
-            pylab.figtext( 0.06, 0.95, title, size=14, horizontalalignment='left', verticalalignment='bottom' )
+            plt.figtext( 0.06, 0.95, title, size=14, horizontalalignment='left', verticalalignment='bottom' )
 
 
         # Figure out scaling
@@ -10458,7 +10460,7 @@ class MultiComponentFit(object):
 
 
 
-            pylab.plot( q_list, residuals_extended, '-', color='b', linewidth=1.0 )
+            plt.plot( q_list, residuals_extended, '-', color='b', linewidth=1.0 )
 
 
         if err_vals != []:
@@ -10470,10 +10472,10 @@ class MultiComponentFit(object):
                 upper1 = [ +1.0*err_vals[i] for i in range(len(err_vals)) ]
                 lower1 = [ -1.0*err_vals[i] for i in range(len(err_vals)-1,-1,-1) ]
             elif self.fargs['chi']=='relative':
-                upper2 = [ +2.0*err_vals[i]/int_list[i] for i in range(len(err_vals)) ]
-                lower2 = [ -2.0*err_vals[i]/int_list[i] for i in range(len(err_vals)-1,-1,-1) ]
-                upper1 = [ +1.0*err_vals[i]/int_list[i] for i in range(len(err_vals)) ]
-                lower1 = [ -1.0*err_vals[i]/int_list[i] for i in range(len(err_vals)-1,-1,-1) ]
+                upper2 = [ +2.0*err_vals[i]/(int_list[i]+0.1) for i in range(len(err_vals)) ]
+                lower2 = [ -2.0*err_vals[i]/(int_list[i]+0.1) for i in range(len(err_vals)-1,-1,-1) ]
+                upper1 = [ +1.0*err_vals[i]/(int_list[i]+0.1) for i in range(len(err_vals)) ]
+                lower1 = [ -1.0*err_vals[i]/(int_list[i]+0.1) for i in range(len(err_vals)-1,-1,-1) ]
             else:
                 print( "Error: Unknown type of 'chi' in plot()." )
 
@@ -10481,7 +10483,7 @@ class MultiComponentFit(object):
             ax2.fill( q_list+q_list_backwards, upper1+lower1, edgecolor='0.82', facecolor='0.82' )
 
 
-        pylab.axhline( 0, color='k' )
+        plt.axhline( 0, color='k' )
         ax2.axis( [xi, xf, yi, yf] )
 
         ax2.set_xticklabels( [] )
@@ -10489,11 +10491,11 @@ class MultiComponentFit(object):
 
 
         if dpi==None:
-            pylab.savefig( filename )
+            plt.savefig( filename )
         else:
-            pylab.savefig( filename, dpi=dpi )
+            plt.savefig( filename, dpi=dpi )
         if interact:
-            pylab.show()
+            plt.show()
 
 
         return int_list

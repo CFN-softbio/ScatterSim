@@ -267,7 +267,7 @@ class Lattice:
 
             fs = self.form_factor(qhkl_vector)
             term1 = (fs*fs.conjugate()).real
-            # if 
+            # if
             #term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) * (self.lattice_spacing_a**2) )
             term2 = self.G_q(qhkl_vector[0], qhkl_vector[1], qhkl_vector[2])
             term3 = peak( q-qhkl )
@@ -398,7 +398,7 @@ class Lattice:
 
         s += "    (a, b, c) = (%.3f,%.3f,%.3f) in nm\n" % (self.lattice_spacing_a,self.lattice_spacing_b,self.lattice_spacing_c)
         s += "    (alpha, beta, gamma) = (%.3f,%.3f,%.3f) in radians\n" % (self.alpha,self.beta,self.gamma)
-        s += "                         = (%.2f,%.2f,%.2f) in degrees\n" % (degrees(self.alpha),degrees(self.beta),degrees(self.gamma))
+        #s += "                         = (%.2f,%.2f,%.2f) in degrees\n" % (degrees(self.alpha),degrees(self.beta),degrees(self.gamma))
         s += "    volume = %.4f nm^3\n\n" % self.unit_cell_volume()
         s += "    Objects:\n"
         for i, obj in enumerate(self.objects):
@@ -432,7 +432,7 @@ class SimpleCubic(Lattice):
         }
         if not isinstance(objects, list):
             objects = [objects]
- 
+
         lattice_positions = ['placement']*len(objects)
 
         if lattice_coordinates is None:
