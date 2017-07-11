@@ -12,6 +12,8 @@ python:
 env:
   - NUMPY=1.10
   - NUMPY=1.11
+  global:
+    - FLAKE8_FLAGS="--exclude=old,extras,tests --ignore E402"
 
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
