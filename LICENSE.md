@@ -1,4 +1,5 @@
 ScatterSim : Prediction/simulation of x-ray scattering curves
+
 Copyright (C) 2017 Brookhaven Science Associates, Brookhaven National
 Laboratory, Kevin G. Yager and contributors.
 
