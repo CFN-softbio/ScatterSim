@@ -51,6 +51,7 @@ class NanoObject:
             # Note : the pargs of the new object is overridden by original
             # object
         '''
+        from .CompositeNanoObjects import CompositeNanoObject
         if isinstance(self, CompositeNanoObject):
             nano_objects = self.nano_objects
             pargs = self.pargs
@@ -1509,4 +1510,3 @@ class PyramidNanoObject(NanoObject):
         return F
 
 
-from .CompositeNanoObjects import CompositeNanoObject
