@@ -23,14 +23,14 @@ scattering but can also be the
 scattering).
 
 Orientation and Placement
-=========================
+-------------------------
 One of the powers of ScatterSim is the ability to place these
 NanoObjects in various positions and orientations, and compound them
 together. Before looking at how to compound objects together, we'll look
 at how we translate and rotate them.
 
 Rotations
----------
+*********
 A ``NanoObject`` is first rotated.
 The rotations are defined through three `extrinsic rotations
 <https://en.wikipedia.org/wiki/Euler_angles>`_, which is just a fancy
@@ -76,7 +76,7 @@ coordinate system. It is recommended that any new `NanoObjects` are
 defined so that their center of mass is aligned with the origin.
 
 Translations
-------------
+************
 
 The translations are straight forward. They are always performed after
 the rotations of the objects and are defined by adding the ``x0``,
