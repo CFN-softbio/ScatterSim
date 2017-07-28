@@ -7,9 +7,12 @@ Welcome to ScatterSim's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+  :maxdepth: 2
+  :caption: Contents:
 
+  NanoObject
+  CompositeNanoObject
+  LatticeObject
 
 
 Indices and tables
@@ -18,3 +21,8 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Introduction
+------------
+This documentation will help introduce how to use ScatterSim to model complex
+nano objects.
