@@ -638,7 +638,13 @@ class CylinderBulgeNanoObject(CompositeNanoObject):
 
 
 class TetrahedraCylindersNanoObject(CompositeNanoObject):
-    ''' A nano object made up of cylinders in a tetrahedral shape.'''
+    ''' A nano object made up of cylinders in a tetrahedral shape.
+        NOTE : Needs to be verified...
+        The canonical unrotated version is aligned along the z-axis.
+        The top inverted tetrahedra has one edge aligned with the x axis and
+        one vertex pointing to the +y direction.
+        The bottom tetrahedra is a mirror image of this.
+    '''
     # TODO : Add density as parameter
 
     def __init__(self, pargs={}):
@@ -739,6 +745,7 @@ class HourglassCylindersNanoObject(CompositeNanoObject):
         pargs_bot['z0'] = -Rc
         pargs_top = pargs.copy()
         pargs_top['phi'] = 180
+        pargs_top['theta'] = 180
         pargs_top['z0'] = Rc
 
         objslist = [TetrahedraCylindersNanoObject,
