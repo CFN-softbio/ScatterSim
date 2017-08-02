@@ -51,7 +51,7 @@ class NanoObject:
             # Note : the pargs of the new object is overridden by original
             # object
         '''
-        from .CompositeNanoObjects import CompositeNanoObject
+        from .CompositeNanoObjects import CompositeNanoObject  # noqa
         if isinstance(self, CompositeNanoObject):
             nano_objects = self.nano_objects
             pargs = self.pargs
@@ -1508,5 +1508,3 @@ class PyramidNanoObject(NanoObject):
         F *= phase*self.pargs['delta_rho']
 
         return F
-
-
