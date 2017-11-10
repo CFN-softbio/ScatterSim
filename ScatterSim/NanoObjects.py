@@ -1,6 +1,14 @@
 import numpy as np
 # cylndrical and spherical Bessel functions
 from scipy.special import j1, spherical_jn
+# TODO : make form_factor rotate the sample as well in this code
+
+
+UnitTrans = np.array([[1, 0, 0, 0],
+                      [0, 1, 0, 0],
+                      [0, 0, 1, 0],
+                      [0, 0, 0, 1],
+                     ], dtype=float)
 
 
 # NanoObject
@@ -283,6 +291,37 @@ class NanoObject:
         coord = np.tensordot(rotation_matrix, coord, axes=(1, 0))
 
         return coord
+
+    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True):
+        ''' map the transformation matrix from the regular to parent
+            This returns a list of tuples of the instance and transformation
+                matrix.
+        '''
+        tranmat = self.get_transformation_matrix(origin=origin)
+        tranmat = np.tensordot(tranmat, parent_tranmat, axes=(1,0))
+        print(parent_tranmat)
+        print(tranmat)
+        return [(self, tranmat)]
+
+    def get_transformation_matrix(self, origin=True):
+        ''' Get the full 4x4 transformation matrix.'''
+
+        rotmat = UnitTrans.copy()
+        rotmat[:3,:3] = self.rotation_matrix
+
+        if origin:
+            tranmat = UnitTrans.copy()
+
+            # not orgin but self.origin which is a position
+            x0, y0, z0 = self.origin
+
+            tranmat[:3,3] = [-x0, -y0, -z0]
+
+            affmat = np.tensordot(rotmat, tranmat, axes=(1,0))
+        else:
+            affmat = rotmat
+
+        return affmat
 
     def form_factor_numerical(self, qvector, num_points=100, size_scale=None):
         ''' This is a brute-force calculation of the form-factor, using the
@@ -625,6 +664,51 @@ class NanoObject:
         V_yz = np.sum(V, axis=0).T
 
         return V_xy, V_xz, V_yz
+
+    def to_vtk_actors(self, parent_trans=UnitTrans):
+        ''' Create a vtk actor of this object.
+
+            NOTE : Needs to return a list to be compatible
+                with the CompositeNanObject.
+        '''
+        try:
+            import vtk
+        except:
+            return None
+
+        fix_transform = UnitTrans.copy()
+        fix_transform[:3, :3] = self.rotation_elements(0, 0, 0)
+
+        parent_trans[:3,:3] = np.tensordot(fix_transform[:3,:3],
+                                           parent_trans[:3,:3], axes=(0,1))
+        parent_trans[3,:3] = fix_transform[3,:3] + parent_trans[3,:3]
+        source = self.to_vtk_source()
+
+        # Create a mapper
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputConnection(source.GetOutputPort())
+
+        affmat = self.get_transformation_matrix()
+        affmat[:3,:3] = np.tensordot(parent_trans[:3,:3], affmat[:3,:3], axes=(0,1))
+        affmat[3, :3] = parent_trans[3, :3] + affmat[3, :3]
+        # print(affmat)
+
+
+        # Create an actor
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+
+        trans = vtk.vtkTransform()
+        trans.SetMatrix(affmat.ravel())
+
+        actor.SetUserTransform(trans)
+
+        return [actor]
+
+    def to_vtk_source(self):
+        ''' This should be the method that returns a source.'''
+        raise NotImplementedError("Not implemented")
+
 
 # Variations of NanoObjects
 # PolydisperseNanoObject
@@ -1333,7 +1417,7 @@ class CylinderNanoObject(NanoObject):
         R = self.pargs['radius']
         L = self.pargs['height']
 
-        rvec = self.map_rcoord(rvec)
+        #rvec = self.map_rcoord(rvec)
         # could be in one step, but making explicit
         x, y, z = rvec
 
@@ -1359,10 +1443,10 @@ class CylinderNanoObject(NanoObject):
             respect to the origin of that coordinate system.
         """
         # Phase must be retrieved *before* mapping in q
-        phase = self.get_phase(qvec)
+        #phase = self.get_phase(qvec)
 
         # first rotate just as for V
-        qvec = self.map_qcoord(qvec)
+        #qvec = self.map_qcoord(qvec)
         self.thresh_array(qvec, 1e-4)
         qx, qy, qz = qvec
 
@@ -1376,10 +1460,26 @@ class CylinderNanoObject(NanoObject):
         # a factor of pi in we need to remove.
         # Why numpy... why??? ><
         F = 2 * np.sinc(qz * H / 2. / np.pi) * j1(qr * R) / qr / R + 1j * 0
-        F *= phase
+        #F *= phase
         F *= self.pargs['delta_rho'] * volume
 
         return F
+
+    def to_vtk_source(self):
+        ''' creates the vtk source.'''
+        try:
+            import vtk
+        except ImportError:
+            return None
+        source = vtk.vtkCylinderSource()
+        x = self.pargs.get('x0', 0)
+        y = self.pargs.get('y0', 0)
+        z = self.pargs.get('z0', 0)
+        source.SetCenter(x, y, z)
+        source.SetRadius(self.pargs['radius'])
+        source.SetHeight(self.pargs['height'])
+        return source
+
 
 # PyramidNanoObject
 

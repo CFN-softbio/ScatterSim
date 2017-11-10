@@ -8,6 +8,12 @@ from copy import deepcopy
 # TODO : Better simpler API for making composite object
 # like make_composite( objectslist, pargslist)
 
+UnitTrans = np.array([[1, 0, 0, 0],
+                      [0, 1, 0, 0],
+                      [0, 0, 1, 0],
+                      [0, 0, 0, 1],
+                     ], dtype=float)
+
 
 class CompositeNanoObject(NanoObject):
     ''' This is a nano object made up of a collection of nano objects.
@@ -66,7 +72,21 @@ class CompositeNanoObject(NanoObject):
                 # defaults to additive
                 obj.pargs['sign'] = 1.
 
-    def form_factor(self, qvector):
+    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True):
+        ''' This returns a list of objects and transformations.
+
+            This is a recursive relation. This will keep calling map_tcoord
+                of each child object until it reaches a leaf (NanoObject).
+        '''
+        newlist = []
+        tranmat = self.get_transformation_matrix(origin=origin)
+        tranmat = np.tensordot(tranmat, parent_tranmat, axes=(1,0))
+        for nobj in self.nano_objects:
+            newlist.extend(nobj.map_tcoord(parent_tranmat=tranmat))
+        return newlist
+
+    # TODO : remove when form_factor works
+    def form_factor_old(self, qvector):
         """Returns the complex-amplitude of the form factor at the given
             q-coordinates.
             qvector is an array as such: [qx, qy, qz] where qx, qy, qz need
@@ -84,6 +104,40 @@ class CompositeNanoObject(NanoObject):
 
         return F
 
+    def form_factor(self, qvector):
+        """Returns the complex-amplitude of the form factor at the given
+            q-coordinates.
+            qvector is an array as such: [qx, qy, qz] where qx, qy, qz need
+            matching dimensions
+        """
+        # recursive call to get coordinates for each objects (get all the
+        # leaves)
+        translist = self.map_tcoord()
+
+        res = np.zeros(qvector.shape[1:], dtype=complex)
+
+        # now run the computations
+        for nobj, transmat in translist:
+            newqvec = np.tensordot(transmat[:3,:3], qvector, axes=(1,0))
+            trans_coord = transmat[3,:3]
+            newqvec += transmat[3,:3][:,np.newaxis, np.newaxis]
+            phase = np.exp(qvector[0]*trans_coord[0])
+            phase *= np.exp(qvector[1]*trans_coord[1])
+            phase *= np.exp(qvector[2]*trans_coord[2])
+            res += nobj.form_factor(newqvec)*phase
+
+        return res
+
+    def to_vtk_actors(self, parent_trans=UnitTrans):
+        ''' Returns the transformed object.'''
+        actors = list()
+        cur_trans = self.get_transformation_matrix()
+        new_trans = np.tensordot(parent_trans, cur_trans, axes=(1,0))
+        for nobj in self.nano_objects:
+            actors.extend(nobj.to_vtk_actors(parent_trans=new_trans))
+        return actors
+
+
     def volume(self):
         ''' Return the sum of the volume of all objects.
         '''
@@ -92,7 +146,7 @@ class CompositeNanoObject(NanoObject):
             volume += nobj.pargs['sign'] * nobj.volume()
         return volume
 
-    def V(self, rvec):
+    def V_old(self, rvec):
         """Returns the intensity of the real-space potential at the
         given real-space coordinates.
         rvec : [x,y,z]
@@ -105,6 +159,28 @@ class CompositeNanoObject(NanoObject):
             Vtot += nobj.pargs['sign'] * nobj.V(rvec)
 
         return Vtot
+
+    def V(self, rvec):
+        """Returns the intensity of the real-space potential at the
+        given real-space coordinates.
+        rvec : [x,y,z]
+        """
+        newvec = np.ones((1, *rvec.shape[1:]))
+        rvec = np.concatenate((rvec, newvec), axis=0)
+        # always transform first
+        # set origin to True for positions
+        translist = self.map_tcoord(origin=True)
+        # print(translist)
+
+        Vtot = np.zeros_like(rvec[0])
+
+        for nobj, trans in translist:
+            newcoord = np.tensordot(trans, rvec, axes=(1,0))[:3]
+
+            Vtot += nobj.pargs['sign']*nobj.V(newcoord)
+
+        return Vtot
+
 
 
 class OctahedronNanoObject(CompositeNanoObject):
