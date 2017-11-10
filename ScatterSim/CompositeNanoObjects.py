@@ -131,10 +131,14 @@ class CompositeNanoObject(NanoObject):
     def to_vtk_actors(self, parent_trans=UnitTrans):
         ''' Returns the transformed object.'''
         actors = list()
-        cur_trans = self.get_transformation_matrix()
-        new_trans = np.tensordot(parent_trans, cur_trans, axes=(1,0))
-        for nobj in self.nano_objects:
-            actors.extend(nobj.to_vtk_actors(parent_trans=new_trans))
+        # always transform first
+        # set origin to True for positions
+        translist = self.map_tcoord(origin=True)
+
+        for nobj, trans in translist:
+            print(trans)
+            actors.append(nobj.to_vtk_actor(trans_mat=trans))
+
         return actors
 
 

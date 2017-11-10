@@ -299,8 +299,6 @@ class NanoObject:
         '''
         tranmat = self.get_transformation_matrix(origin=origin)
         tranmat = np.tensordot(tranmat, parent_tranmat, axes=(1,0))
-        print(parent_tranmat)
-        print(tranmat)
         return [(self, tranmat)]
 
     def get_transformation_matrix(self, origin=True):
@@ -665,8 +663,10 @@ class NanoObject:
 
         return V_xy, V_xz, V_yz
 
-    def to_vtk_actors(self, parent_trans=UnitTrans):
+    def to_vtk_actor(self, trans_mat=UnitTrans):
         ''' Create a vtk actor of this object.
+
+            trans_mat : transformation matrix
 
             NOTE : Needs to return a list to be compatible
                 with the CompositeNanObject.
@@ -676,22 +676,11 @@ class NanoObject:
         except:
             return None
 
-        fix_transform = UnitTrans.copy()
-        fix_transform[:3, :3] = self.rotation_elements(0, 0, 0)
-
-        parent_trans[:3,:3] = np.tensordot(fix_transform[:3,:3],
-                                           parent_trans[:3,:3], axes=(0,1))
-        parent_trans[3,:3] = fix_transform[3,:3] + parent_trans[3,:3]
         source = self.to_vtk_source()
 
         # Create a mapper
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInputConnection(source.GetOutputPort())
-
-        affmat = self.get_transformation_matrix()
-        affmat[:3,:3] = np.tensordot(parent_trans[:3,:3], affmat[:3,:3], axes=(0,1))
-        affmat[3, :3] = parent_trans[3, :3] + affmat[3, :3]
-        # print(affmat)
 
 
         # Create an actor
@@ -699,11 +688,11 @@ class NanoObject:
         actor.SetMapper(mapper)
 
         trans = vtk.vtkTransform()
-        trans.SetMatrix(affmat.ravel())
+        trans.SetMatrix(trans_mat.ravel())
 
         actor.SetUserTransform(trans)
 
-        return [actor]
+        return actor
 
     def to_vtk_source(self):
         ''' This should be the method that returns a source.'''
@@ -1471,11 +1460,8 @@ class CylinderNanoObject(NanoObject):
             import vtk
         except ImportError:
             return None
+        # TODO : Add filter to pre-rotate?
         source = vtk.vtkCylinderSource()
-        x = self.pargs.get('x0', 0)
-        y = self.pargs.get('y0', 0)
-        z = self.pargs.get('z0', 0)
-        source.SetCenter(x, y, z)
         source.SetRadius(self.pargs['radius'])
         source.SetHeight(self.pargs['height'])
         return source
