@@ -2,13 +2,9 @@ import numpy as np
 # cylndrical and spherical Bessel functions
 from scipy.special import j1, spherical_jn
 # TODO : make form_factor rotate the sample as well in this code
+from .matrices import UnitTrans
+from .tools import rotmat3D
 
-
-UnitTrans = np.array([[1, 0, 0, 0],
-                      [0, 1, 0, 0],
-                      [0, 0, 1, 0],
-                      [0, 0, 0, 1],
-                     ], dtype=float)
 
 
 # NanoObject
@@ -142,7 +138,7 @@ class NanoObject:
         if len(w[0]) > 0:
             r[w] = val
 
-    def rotation_elements(self, eta, phi, theta):
+    def rotation_elements(self, eta, phi, theta, vtk=False):
         """Converts angles into an appropriate rotation matrix.
 
         Three-axis rotation:
@@ -156,6 +152,12 @@ class NanoObject:
         eta = np.radians(eta)
         phi = np.radians(phi)
         theta = np.radians(theta)
+
+        if vtk:
+            print("vtk rotation true")
+            #phi = -phi
+            #theta = -theta
+            #eta = -eta
 
         c1 = np.cos(eta)
         c2 = np.cos(phi)
@@ -292,20 +294,29 @@ class NanoObject:
 
         return coord
 
-    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True):
+    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True, vtk=False):
         ''' map the transformation matrix from the regular to parent
             This returns a list of tuples of the instance and transformation
                 matrix.
         '''
-        tranmat = self.get_transformation_matrix(origin=origin)
+        tranmat = self.get_transformation_matrix(origin=origin, vtk=vtk)
         tranmat = np.tensordot(tranmat, parent_tranmat, axes=(1,0))
         return [(self, tranmat)]
 
-    def get_transformation_matrix(self, origin=True):
+    def get_transformation_matrix(self, origin=True, vtk=False):
         ''' Get the full 4x4 transformation matrix.'''
 
+        pargs = self.pargs
+        if vtk:
+            theta, phi, eta = pargs['eta'], pargs['phi'], pargs['theta']
+            eta = -eta
+            theta = -theta
+        else:
+            eta, phi, theta = pargs['eta'], pargs['phi'], pargs['theta']
+        rotation_matrix = self.rotation_elements(eta=eta, phi=phi, theta=theta,
+                                                 vtk=vtk)
         rotmat = UnitTrans.copy()
-        rotmat[:3,:3] = self.rotation_matrix
+        rotmat[:3,:3] = rotation_matrix
 
         if origin:
             tranmat = UnitTrans.copy()
@@ -313,7 +324,11 @@ class NanoObject:
             # not orgin but self.origin which is a position
             x0, y0, z0 = self.origin
 
-            tranmat[:3,3] = [-x0, -y0, -z0]
+            if not vtk:
+                tranmat[:3,3] = [-x0, -y0, -z0]
+            else:
+                print("vtk true")
+                tranmat[:3,3] = [x0, y0, z0]
 
             affmat = np.tensordot(rotmat, tranmat, axes=(1,0))
         else:
@@ -688,6 +703,7 @@ class NanoObject:
         actor.SetMapper(mapper)
 
         trans = vtk.vtkTransform()
+        # I think it's transpose?
         trans.SetMatrix(trans_mat.ravel())
 
         actor.SetUserTransform(trans)
@@ -1362,9 +1378,30 @@ class SphereNanoObject(NanoObject):
         s = "R = %.3f nm" % self.pargs['radius']
         return s
 
+    def to_vtk_source(self):
+        ''' creates the vtk source.'''
+        try:
+            import vtk
+        except ImportError:
+            return None
+        # TODO : Add filter to pre-rotate?
+        source = vtk.vtkSphereSource()
+        source.SetRadius(self.pargs['radius'])
+        height = self.pargs['height']
+
+        # phi in degrees
+        # rotate 90 degrees about x to get the canonical form
+        trans_mat = rotmat3D(90, axis=1)
+        trans = vtk.vtkTransform()
+        trans.SetMatrix(trans_mat.ravel())
+
+        filt = vtk.vtkTransformFilter()
+        filt.SetTransform(trans)
+        filt.SetInputConnection(source.GetOutputPort())
+
+        return filt
+
 # CylinderNanoObject
-
-
 class CylinderNanoObject(NanoObject):
     """A cylinder nano-object. The canonical (unrotated) version
     has the circular-base in the x-y plane, with the length along z.
@@ -1464,7 +1501,19 @@ class CylinderNanoObject(NanoObject):
         source = vtk.vtkCylinderSource()
         source.SetRadius(self.pargs['radius'])
         source.SetHeight(self.pargs['height'])
-        return source
+        height = self.pargs['height']
+
+        # phi in degrees
+        # rotate 90 degrees about x to get the canonical form
+        trans_mat = rotmat3D(90, axis=1)
+        trans = vtk.vtkTransform()
+        trans.SetMatrix(trans_mat.ravel())
+
+        filt = vtk.vtkTransformFilter()
+        filt.SetTransform(trans)
+        filt.SetInputConnection(source.GetOutputPort())
+
+        return filt
 
 
 # PyramidNanoObject

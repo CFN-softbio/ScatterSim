@@ -2,17 +2,14 @@ from .NanoObjects import NanoObject, PyramidNanoObject, CylinderNanoObject,\
     SphereNanoObject
 import numpy as np
 from copy import deepcopy
+from .matrices import UnitTrans
+from .tools import rotmat3D
+
 # This file is where more complex nano objects can be stored
 # These interface the same way as NanoObjects but since they're a little more
 # complex it makes sense to separate them from NanoObjects
 # TODO : Better simpler API for making composite object
 # like make_composite( objectslist, pargslist)
-
-UnitTrans = np.array([[1, 0, 0, 0],
-                      [0, 1, 0, 0],
-                      [0, 0, 1, 0],
-                      [0, 0, 0, 1],
-                     ], dtype=float)
 
 
 class CompositeNanoObject(NanoObject):
@@ -72,17 +69,17 @@ class CompositeNanoObject(NanoObject):
                 # defaults to additive
                 obj.pargs['sign'] = 1.
 
-    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True):
+    def map_tcoord(self, parent_tranmat=UnitTrans, origin=True, vtk=False):
         ''' This returns a list of objects and transformations.
 
             This is a recursive relation. This will keep calling map_tcoord
                 of each child object until it reaches a leaf (NanoObject).
         '''
         newlist = []
-        tranmat = self.get_transformation_matrix(origin=origin)
+        tranmat = self.get_transformation_matrix(origin=origin, vtk=vtk)
         tranmat = np.tensordot(tranmat, parent_tranmat, axes=(1,0))
         for nobj in self.nano_objects:
-            newlist.extend(nobj.map_tcoord(parent_tranmat=tranmat))
+            newlist.extend(nobj.map_tcoord(parent_tranmat=tranmat, vtk=vtk))
         return newlist
 
     # TODO : remove when form_factor works
@@ -133,7 +130,7 @@ class CompositeNanoObject(NanoObject):
         actors = list()
         # always transform first
         # set origin to True for positions
-        translist = self.map_tcoord(origin=True)
+        translist = self.map_tcoord(origin=True, vtk=True)
 
         for nobj, trans in translist:
             print(trans)
