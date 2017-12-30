@@ -39,6 +39,12 @@ class CompositeNanoObject(NanoObject):
     '''
 
     def __init__(self, objlist, parglist=None, pargs={}):
+        '''
+            Composite object
+
+            objlist : either list of classes or instantiated objects
+                    (pargslist must be None for the latter)
+        '''
         super(CompositeNanoObject, self).__init__(pargs=pargs)
 
         # now define the objects in a list
@@ -667,10 +673,9 @@ class TetrahedraCylindersNanoObject(CompositeNanoObject):
         alpha = np.degrees(alpha_r)
         # midway point along height
         D = L/2./np.cos(beta_r)
-        A = L/2.*np.tan(beta_r)
 
         # midway to intersection points
-        A = L/2.*np.tan(beta_r)
+        A = D/2. # also it is: L/2.*np.tan(beta_r)
         # note this is NOT the height parameter
 
         # in order of x, y, z, eta, phi, theta
