@@ -20,9 +20,9 @@
 ###################################################################
 
 
-from ScatterSim.BaseClasses import Potential, Model, arrays_equal
-from ScatterSim.BaseClasses import radians, cos, sin
-from ScatterSim import gamma
+from ScatterSim.old.BaseClasses import Potential, Model, arrays_equal
+from ScatterSim.old.BaseClasses import radians, cos, sin
+from ScatterSim.old import gamma
 import os, sys
 
 from cmath import exp as cexp

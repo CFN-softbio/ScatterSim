@@ -36,7 +36,7 @@
 
 
 from math import radians, degrees, pi, sin, cos, asin, sqrt, exp, tan, log, atan, floor  # basic math
-import ScatterSim.physcon as pc
+import ScatterSim.old.physcon as pc
 keV_to_Joule = pc.e*1000.0
 from cmath import exp as cexp, sqrt as csqrt    # complex-number math
 import numpy                                    # Numerical Python
