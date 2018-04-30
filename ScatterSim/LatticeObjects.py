@@ -169,8 +169,8 @@ class Lattice:
                         self.lattice_objects.append(deepcopy(objects[i]))
             # move objects into list
         else:
-            raise ValueError("Can only handle one or {} " +
-                             "objects".format(self.number_types) +
+            raise ValueError("Can only handle one or " +
+                             "{} objects".format(self.number_types) +
                              ", but received {}.".format(len(objects))
                              )
 
@@ -875,7 +875,9 @@ class ExtendedLattice(Lattice):
 
 class HexagonalLattice(Lattice):
     def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None,
-                 lattice_spacing_c=1.0, sigma_D=0.01, **kwargs):
+                 lattice_spacing_c=None, sigma_D=0.01, lattice_types=None,
+                 lattice_coordinates=None, lattice_positions=None,
+                 symmetry=None, alpha=90, beta=90, gamma=60):
         ''' Hexagonal lattice
 
             lattice_spacing_a : the lattice spacing in the x plane
@@ -896,22 +898,27 @@ class HexagonalLattice(Lattice):
                 b3 = 2*np.pi/c*(0, 0, 1)
         '''
         # Define the lattice
-        symmetry = {}
-        symmetry['crystal family'] = 'cubic'
-        symmetry['crystal system'] = 'cubic'
-        symmetry['Bravais lattice'] = 'F'
-        symmetry['crystal class'] = 'hexoctahedral'
-        symmetry['point group'] = 'm3m'
-        symmetry['space group'] = 'Fm3m'
+        if symmetry is None:
+            symmetry = {}
+            symmetry['crystal family'] = 'cubic'
+            symmetry['crystal system'] = 'cubic'
+            symmetry['Bravais lattice'] = 'F'
+            symmetry['crystal class'] = 'hexoctahedral'
+            symmetry['point group'] = 'm3m'
+            symmetry['space group'] = 'Fm3m'
 
-        # positions = ['all']
-        lattice_positions = ['corner', 'faceXY', 'faceYZ', 'faceXZ']
+        if lattice_positions is None:
+            lattice_positions = ['all']
 
-        lattice_coordinates = [(0.0, 0.0, 0.0),
+        if lattice_coordinates is None:
+            lattice_coordinates = [(0.0, 0.0, 0.0),
                                ]
-        lattice_types = [1]
+        if lattice_types is None:
+            lattice_types = [1]
         if lattice_spacing_b is None:
             lattice_spacing_b = lattice_spacing_a
+        if lattice_spacing_c is None:
+            lattice_spacing_c = lattice_spacing_a
 
         # TODO : gamma should be 60 deg I think (but alpha, beta, gamma are not
         # really used)
@@ -922,6 +929,9 @@ class HexagonalLattice(Lattice):
             lattice_spacing_a=lattice_spacing_a,
             lattice_spacing_b=lattice_spacing_b,
             lattice_spacing_c=lattice_spacing_c,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
             sigma_D=sigma_D,
             symmetry=symmetry,
             lattice_positions=lattice_positions,
@@ -937,7 +947,7 @@ class HexagonalLattice(Lattice):
 
         # the basis vectors for hexagonal
         # TODO : should put this in init?
-        self.b1 = 2*np.pi/a*np.array([1, -1/np.sqrt(3), 0])
+        self.b1 = 2*np.pi/a*np.array([1, 1/np.sqrt(3), 0])
         self.b2 = 2*np.pi/b*np.array([0, 2/np.sqrt(3), 0])
         self.b3 = 2*np.pi/c*np.array([0, 0, 1])
 
@@ -986,14 +996,28 @@ class HexagonalLattice(Lattice):
 class HexagonalDiamondLattice(HexagonalLattice):
     # Initialization
     ########################################
-    def __init__(self, objects, bond_length=1.0, alpha=90, beta=90, gamma=60,
+    def __init__(self, objects, lattice_spacing_a=None, lattice_spacing_b=None,
+                 lattice_spacing_c=None, alpha=90, beta=90, gamma=60,
                  sigma_D=0.01):
+        ''' This is for a hexagonal diamond lattice.
+
+            Some useful relations:
+                lattice_spacing_a = bond_length*np.sqrt(2/3.)
+                where bond_length is the bond length. You must specify the
+                positionsi in terms of lattice spacing, not bond length so use
+                this conversion if needed.
+        '''
         # write the lattice spacings in terms of the bond length
         # this is different from the previous conventions but stresses
         # that hexagonal diamond really depends on bond length
-        lattice_spacing_a = bond_length*np.sqrt(2/3.)
-        lattice_spacing_b = lattice_spacing_a
-        lattice_spacing_c = 2*bond_length*(2*np.sqrt(2)/3. + 1)
+
+        if lattice_spacing_a is None:
+            raise ValueError("Error, must specify at least the"
+                             " a lattice spacing.")
+        if lattice_spacing_b is None:
+            lattice_spacing_b = lattice_spacing_a
+        if lattice_spacing_c is None:
+            lattice_spacing_c = lattice_spacing_a*4.0/np.sqrt(6.)
 
         # Define the lattice
         symmetry = {}
@@ -1018,10 +1042,11 @@ class HexagonalDiamondLattice(HexagonalLattice):
                                  (0.0, 0.0, 5.0/8.0), \
                                ]
         lattice_objects = [objects[0], \
-                                    objects[0], \
-                                    objects[0], \
-                                    objects[0], \
-                                ]
+                          ]
+                                    #objects[0], \
+                                    #objects[0], \
+                                    #objects[0], \
+                                #]
         lattice_types = [1,1,1,1]
 
         super(
