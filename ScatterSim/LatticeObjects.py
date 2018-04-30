@@ -169,8 +169,8 @@ class Lattice:
                         self.lattice_objects.append(deepcopy(objects[i]))
             # move objects into list
         else:
-            raise ValueError("Can only handle one or " +
-                             "{} objects".format(self.number_types) +
+            raise ValueError("Can only handle one or {} " +
+                             "objects".format(self.number_types) +
                              ", but received {}.".format(len(objects))
                              )
 
@@ -257,13 +257,15 @@ class Lattice:
 
         return qhkl
 
-    def iterate_over_hkl_compute(self, max_hkl=6):
+    def iterate_over_hkl_compute(self, max_hkl=6, condition=None):
         """Returns a sequence of hkl lattice peaks (reflections)."""
 
         # r will contain the return value, an array with rows that contain:
         # h, k, l, peak multiplicity, symmetry factor, qhkl, qhkl_vector
         r = []
-
+        if condition is None:
+            condition = lambda x : True
+        
         for h in range(-max_hkl, max_hkl + 1):
             for k in range(-max_hkl, max_hkl + 1):
                 for l in range(-max_hkl, max_hkl + 1):
@@ -275,7 +277,8 @@ class Lattice:
 
                         if m != 0 and f != 0:
                             qhkl, qhkl_vector = self.q_hkl(h, k, l)
-                            r.append([h, k, l, m, f, qhkl, qhkl_vector])
+                            if condition(qhkl_vector):
+                                r.append([h, k, l, m, f, qhkl, qhkl_vector])
 
         return r
 
@@ -304,6 +307,26 @@ class Lattice:
             summation += (m * (f**2)) * term1 * term2 * term3
 
         return summation
+        
+    def sum_over_hkl_3d(self, qvectors, peak, max_hkl=6,hkl_vecs=None):
+        summation = 0
+        if hkl_vecs is None:
+            self.iterate_over_hkl(max_hkl=max_hkl)
+        for h, k, l, m, f, qhkl, qhkl_vector in hkl_vecs:
+
+            fs = self.form_factor(qhkl_vector)
+            term1 = (fs * fs.conjugate()).real
+            # if
+            # term2 = np.exp( -(self.sigma_D**2) * (qhkl**2) *
+            # (self.lattice_spacing_a**2) )
+            term2 = self.G_q(qhkl_vector[0], qhkl_vector[1], qhkl_vector[2])
+            qdiff = qvectors - qhkl_vector[:, np.newaxis]
+            qmag = np.sqrt(qdiff[0]**2 + qdiff[1]**2 + qdiff[2]**2)
+            term3 = peak(qmag)
+
+            summation += (m * (f**2)) * term1 * term2 * term3
+
+        return summation		
 
     # Form factor computations
 
