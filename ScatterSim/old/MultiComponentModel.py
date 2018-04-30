@@ -20,9 +20,9 @@
 ###################################################################
 
 
-from ScatterSim.BaseClasses import Potential, Model, arrays_equal
-from ScatterSim.BaseClasses import radians, cos, sin
-from ScatterSim import gamma
+from ScatterSim.old.BaseClasses import Potential, Model, arrays_equal
+from ScatterSim.old.BaseClasses import radians, cos, sin
+from ScatterSim.old import gamma
 import os, sys
 
 from cmath import exp as cexp
@@ -7534,7 +7534,9 @@ class HexagonalLattice(Lattice):
 
     # Initialization
     ########################################
-    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None, lattice_spacing_c=None, alpha=90, beta=90, gamma=60, sigma_D=0.01):
+    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None,
+                 lattice_spacing_c=None, alpha=90, beta=90, gamma=60,
+                 sigma_D=0.01):
 
         self.init_containers()
 
@@ -8961,7 +8963,9 @@ class HexagonalDiamondLattice(HexagonalLattice):
 
     # Initialization
     ########################################
-    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None, lattice_spacing_c=None, alpha=90, beta=90, gamma=60, sigma_D=0.01):
+    def __init__(self, objects, lattice_spacing_a=1.0, lattice_spacing_b=None,
+                 lattice_spacing_c=None, alpha=90, beta=90, gamma=60,
+                 sigma_D=0.01):
 
         self.init_containers()
 
