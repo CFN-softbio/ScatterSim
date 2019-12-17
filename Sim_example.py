@@ -99,6 +99,7 @@ qd705 = SpherePolydisperseNanoObject( pargs=pargs )
 
 # Non-lattice parameters
 peak1 = PeakShape(nu=1, delta=0.05)
+#peak1 = PeakShape(nu=1, delta=0.05, q1=0.024, slope=0.004)  #giving q1 and slope for Williamson-Hall analysis to get the lattice strain
 back = background( 5.0, 0.012, -4.0, 5.0, -0.5 )
 
 nearest_neighbor = 33.8

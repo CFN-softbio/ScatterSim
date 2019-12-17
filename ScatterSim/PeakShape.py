@@ -13,7 +13,8 @@ class PeakShape(object):
     infinity = 1e300
 
     def __init__(self, nu=0, delta=0.1, gauss_cutoff=200, lorentz_cutoff=0.005,
-                 product_terms=None, gamma_method=False):
+                 product_terms=None, gamma_method=False, q1=None, slope=None,):
+        '''2019/12/12 YG Update init with q1 and slope for Williamson-Hall analysis to get the lattice strain'''
 
         self.sigma = None
         self.fwhm = None
@@ -26,6 +27,9 @@ class PeakShape(object):
 
         self.requested_product_terms = product_terms
         self.reshape(nu, delta)
+        
+        self.q1=q1
+        self.slope=slope
 
     def reshape(self, nu=0, delta=0.1):
         self.nu = 1.0 * nu
@@ -107,7 +111,8 @@ class PeakShape(object):
         based on the parameters it was instantiated with."""
 
         qs = np.abs(qs)    # Peak is symmetric
-
+        if self.q1 is not None and self.slope is not None:
+            self.delta = self.slope *( qs - self.q1 ) + self.delta 
         if self.nu > self.gauss_cutoff:
             # Gaussian
             val = (2 / (np.pi * self.delta)) * \
