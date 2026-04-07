@@ -1268,14 +1268,16 @@ class SphereNanoObject(NanoObject):
     def form_factor_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the particle form factor, averaged over every possible orientation.
         """
-        return self.form_factor(np.array([q, 0, 0]))
+        #return self.form_factor(np.array([q, 0, 0]))
+        return self.form_factor(np.array([q, np.zeros(len(q)), np.zeros(len(q))]))
 
     def form_factor_squared_isotropic(self, q, num_phi=50, num_theta=50):
         """Returns the particle form factor squared, averaged over every
         possible orientation.
         """
         # numpy should broadcast 0 to same length as q
-        return self.form_factor_squared(np.array([q, 0, 0]))
+        #return self.form_factor_squared(np.array([q, 0, 0]))
+        return self.form_factor_squared(np.array([q, np.zeros(len(q)), np.zeros(len(q))]))
 
     def to_string(self):
         """Returns a string describing the object."""
